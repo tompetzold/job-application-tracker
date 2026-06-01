@@ -22,11 +22,17 @@ public class ApplicationRepository {
     }
 
     public List<Application> findAll() {
-        String sql = "SELECT id, company, position FROM applications";
+        String sql = "SELECT id, company, position FROM applications ORDER BY id DESC";
         return jdbc.query(sql, (rs, rowNum) -> new Application(
                 rs.getLong("id"),
                 rs.getString("company"),
                 rs.getString("position")
         ));
+    }
+
+    public boolean deleteById(Long id) {
+        String sql = "DELETE FROM applications WHERE id = ?";
+        int affectedRows = jdbc.update(sql, id);
+        return affectedRows > 0;
     }
 }

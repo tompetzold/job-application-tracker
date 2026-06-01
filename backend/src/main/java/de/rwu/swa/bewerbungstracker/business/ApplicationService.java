@@ -27,4 +27,16 @@ public class ApplicationService {
     public List<Application> findAll() {
         return repository.findAll();
     }
+
+    public void deleteById(Long id) {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("Ungültige Bewerbungs-ID");
+        }
+
+        boolean deleted = repository.deleteById(id);
+
+        if (!deleted) {
+            throw new IllegalArgumentException("Bewerbung mit ID " + id + " wurde nicht gefunden");
+        }
+    }
 }
