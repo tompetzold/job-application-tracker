@@ -1,311 +1,300 @@
-import { useEffect, useMemo, useState } from 'react'
-import './App.css'
+import { useEffect, useMemo, useState } from "react";
+import "./App.css";
+import Board from "./components/Board";
+import Header from "./components/Header";
+import NewApplicationModal from "./components/NewApplicationModal";
+import ApplicationDrawer from "./components/ApplicationDrawer";
+import QuickMoveMenu from "./components/QuickMoveMenu";
+import Stats from "./components/Stats";
+import StatisticsView from "./components/StatisticsView";
+import FinalApplications from "./components/FinalApplications";
+import {
+  fetchApplications,
+  createApplication,
+  updateApplication,
+  updateApplicationStatus,
+  undoLastStatusChange,
+  deleteApplication,
+} from "./api/applicationsApi";
+import {
+  BOARD_STATUSES,
+  FINAL_STATUSES,
+  canMoveApplication,
+  getAllowedTargetStatuses,
+} from "./constants/applicationStatus";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+function normalizeSearchValue(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
 
-function App() {
-  const [applications, setApplications] = useState([])
-  const [company, setCompany] = useState('')
-  const [position, setPosition] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const [deletingId, setDeletingId] = useState(null)
-  const [error, setError] = useState('')
-  const [backendAvailable, setBackendAvailable] = useState(false)
-  const [lastUpdated, setLastUpdated] = useState(null)
+  return value.trim().toLowerCase();
+}
 
-  const applicationCountLabel = useMemo(() => {
-    if (applications.length === 1) {
-      return '1 Bewerbung'
+function filterApplications(applications, searchTerm) {
+  const normalizedSearchTerm = normalizeSearchValue(searchTerm);
+
+  if (!normalizedSearchTerm) {
+    return applications;
+  }
+
+  return applications.filter((application) => {
+    const company = normalizeSearchValue(application.company);
+    const position = normalizeSearchValue(application.position);
+    const location = normalizeSearchValue(application.location);
+    const salary = normalizeSearchValue(application.salary);
+    const notes = normalizeSearchValue(application.notes);
+
+    return (
+        company.includes(normalizedSearchTerm) ||
+        position.includes(normalizedSearchTerm) ||
+        location.includes(normalizedSearchTerm) ||
+        salary.includes(normalizedSearchTerm) ||
+        notes.includes(normalizedSearchTerm)
+    );
+  });
+}
+
+function replaceApplication(applications, updatedApplication) {
+  if (!updatedApplication) {
+    return applications;
+  }
+
+  return applications.map((application) => {
+    if (String(application.id) !== String(updatedApplication.id)) {
+      return application;
     }
 
-    return `${applications.length} Bewerbungen`
-  }, [applications.length])
+    return updatedApplication;
+  });
+}
+
+export default function App() {
+  const [applications, setApplications] = useState([]);
+  const [dataSource, setDataSource] = useState("mock");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeView, setActiveView] = useState("overview");
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
+  const [quickMoveApplication, setQuickMoveApplication] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const filteredApplications = useMemo(() => {
+    return filterApplications(applications, searchTerm);
+  }, [applications, searchTerm]);
+
+  const boardApplications = useMemo(() => {
+    return filteredApplications.filter((application) => {
+      return BOARD_STATUSES.includes(application.status);
+    });
+  }, [filteredApplications]);
+
+  const finalApplications = useMemo(() => {
+    return filteredApplications.filter((application) => {
+      return FINAL_STATUSES.includes(application.status);
+    });
+  }, [filteredApplications]);
 
   async function loadApplications() {
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/applications`)
-
-      if (!response.ok) {
-        throw new Error(`Backend antwortet mit HTTP ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (!Array.isArray(data)) {
-        throw new Error('Backend hat kein gültiges Listenformat geliefert.')
-      }
-
-      setApplications(data)
-      setBackendAvailable(true)
-      setLastUpdated(new Date())
-    } catch (error) {
-      setBackendAvailable(false)
-      setApplications([])
-      setError(
-          error instanceof TypeError
-              ? 'Backend nicht erreichbar oder CORS blockiert den Request.'
-              : error.message
-      )
-    } finally {
-      setLoading(false)
-    }
+    const result = await fetchApplications();
+    setApplications(result.data);
+    setDataSource(result.source);
+    setLoading(false);
   }
 
-  async function createApplication(event) {
-    event.preventDefault()
+  async function handleCreateApplication(payload) {
+    const result = await createApplication(payload);
 
-    const normalizedCompany = company.trim()
-    const normalizedPosition = position.trim()
+    setApplications((currentApplications) => {
+      return [result.data, ...currentApplications];
+    });
 
-    if (!normalizedCompany || !normalizedPosition) {
-      setError('Firma und Position müssen ausgefüllt sein.')
-      return
-    }
-
-    setSubmitting(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/applications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          company: normalizedCompany,
-          position: normalizedPosition,
-        }),
-      })
-
-      const responseBody = await response.json().catch(() => null)
-
-      if (!response.ok) {
-        throw new Error(responseBody?.error ?? `Backend antwortet mit HTTP ${response.status}`)
-      }
-
-      setCompany('')
-      setPosition('')
-      setBackendAvailable(true)
-      await loadApplications()
-    } catch (error) {
-      setBackendAvailable(false)
-      setError(error.message || 'Bewerbung konnte nicht gespeichert werden.')
-    } finally {
-      setSubmitting(false)
-    }
+    setDataSource(result.source);
   }
 
-  async function deleteApplication(id) {
-    if (!id) {
-      setError('Bewerbungs-ID fehlt.')
-      return
+  async function handleUpdateApplication(id, payload) {
+    const result = await updateApplication(id, payload);
+
+    setApplications((currentApplications) => {
+      return replaceApplication(currentApplications, result.data);
+    });
+
+    setSelectedApplication(result.data);
+    setDataSource(result.source);
+  }
+
+  async function handleMoveApplication(application, targetStatus) {
+    if (!application || !targetStatus) {
+      return;
     }
 
-    const confirmed = window.confirm(`Bewerbung mit ID ${id} wirklich löschen?`)
-
-    if (!confirmed) {
-      return
+    if (!canMoveApplication(application.status, targetStatus)) {
+      return;
     }
 
-    setDeletingId(id)
-    setError('')
+    const result = await updateApplicationStatus(application.id, targetStatus);
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/applications/${id}`, {
-        method: 'DELETE',
-      })
+    setApplications((currentApplications) => {
+      return replaceApplication(currentApplications, result.data);
+    });
 
-      if (!response.ok) {
-        const responseBody = await response.json().catch(() => null)
-        throw new Error(responseBody?.error ?? `Backend antwortet mit HTTP ${response.status}`)
+    setSelectedApplication((currentSelectedApplication) => {
+      if (!currentSelectedApplication) {
+        return currentSelectedApplication;
       }
 
-      setApplications((currentApplications) =>
-          currentApplications.filter((application) => application.id !== id)
-      )
-      setBackendAvailable(true)
-      setLastUpdated(new Date())
-    } catch (error) {
-      setBackendAvailable(false)
-      setError(
-          error instanceof TypeError
-              ? 'Löschen fehlgeschlagen. Backend nicht erreichbar oder CORS blockiert den Request.'
-              : error.message
-      )
-    } finally {
-      setDeletingId(null)
+      if (String(currentSelectedApplication.id) !== String(application.id)) {
+        return currentSelectedApplication;
+      }
+
+      return result.data;
+    });
+
+    setDataSource(result.source);
+  }
+
+  async function handleUndoLastStatusChange(application) {
+    if (!application) {
+      return;
     }
+
+    const result = await undoLastStatusChange(application.id);
+
+    setApplications((currentApplications) => {
+      return replaceApplication(currentApplications, result.data);
+    });
+
+    setSelectedApplication(result.data);
+    setDataSource(result.source);
+  }
+
+  async function handleDeleteApplication(application) {
+    if (!application) {
+      return;
+    }
+
+    const result = await deleteApplication(application.id);
+
+    setApplications((currentApplications) => {
+      return currentApplications.filter((currentApplication) => {
+        return String(currentApplication.id) !== String(application.id);
+      });
+    });
+
+    setSelectedApplication(null);
+    setQuickMoveApplication(null);
+    setDataSource(result.source);
+  }
+
+  function handleOpenApplication(application) {
+    setSelectedApplication(application);
+  }
+
+  function handleCloseDrawer() {
+    setSelectedApplication(null);
+  }
+
+  function handleOpenQuickMove(application) {
+    setQuickMoveApplication(application);
+  }
+
+  function handleCloseQuickMove() {
+    setQuickMoveApplication(null);
+  }
+
+  async function handleQuickMove(targetStatus) {
+    if (!quickMoveApplication) {
+      return;
+    }
+
+    await handleMoveApplication(quickMoveApplication, targetStatus);
+    setQuickMoveApplication(null);
+  }
+
+  function handleOpenCreateModal() {
+    setCreateModalOpen(true);
+  }
+
+  function handleCloseCreateModal() {
+    setCreateModalOpen(false);
   }
 
   useEffect(() => {
-    loadApplications()
-  }, [])
+    loadApplications();
+  }, []);
+
+  const allowedQuickMoveStatuses = quickMoveApplication
+      ? getAllowedTargetStatuses(quickMoveApplication.status)
+      : [];
 
   return (
       <main className="app-shell">
-        <section className="hero-card">
-          <div className="hero-content">
-            <div className="badge">Schichtenarchitektur Demo</div>
-            <h1>Bewerbungstracker</h1>
-            <p>
-              Separates React-Frontend gegen ein Spring-Boot-Backend mit PostgreSQL.
-              Die UI kommuniziert ausschließlich über REST.
-            </p>
-          </div>
+        <Header
+            activeView={activeView}
+            onChangeView={setActiveView}
+            dataSource={dataSource}
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            onCreateApplication={handleOpenCreateModal}
+        />
 
-          <div className="system-panel">
-            <div className={backendAvailable ? 'connection online' : 'connection offline'}>
-              <span></span>
-              {backendAvailable ? 'Backend verbunden' : 'Backend nicht verbunden'}
-            </div>
-
-            <div className="system-row">
-              <span>Frontend</span>
-              <strong>localhost:5173</strong>
-            </div>
-
-            <div className="system-row">
-              <span>Backend</span>
-              <strong>{API_BASE_URL.replace('http://', '')}</strong>
-            </div>
-
-            <button type="button" onClick={loadApplications} disabled={loading || submitting}>
-              {loading ? 'Aktualisiere...' : 'Verbindung prüfen'}
-            </button>
-          </div>
-        </section>
-
-        <section className="layout">
-          <article className="card form-card">
-            <div className="card-title">
-              <div>
-                <h2>Neue Bewerbung</h2>
-                <p>Lege einen neuen Bewerbungseintrag an.</p>
-              </div>
-            </div>
-
-            {error && (
-                <div className="message error">
-                  <strong>Fehler</strong>
-                  <span>{error}</span>
-                </div>
-            )}
-
-            {!backendAvailable && !loading && (
-                <div className="message warning">
-                  <strong>Backend prüfen</strong>
-                  <span>Erwartete API: {API_BASE_URL}/api/applications</span>
-                </div>
-            )}
-
-            <form onSubmit={createApplication} className="application-form">
-              <label>
-                <span>Firma</span>
-                <input
-                    value={company}
-                    onChange={(event) => setCompany(event.target.value)}
-                    type="text"
-                    placeholder="z. B. RWU"
-                    disabled={submitting}
-                />
-              </label>
-
-              <label>
-                <span>Position</span>
-                <input
-                    value={position}
-                    onChange={(event) => setPosition(event.target.value)}
-                    type="text"
-                    placeholder="z. B. Tutor"
-                    disabled={submitting}
-                />
-              </label>
-
-              <button type="submit" disabled={submitting}>
-                {submitting ? 'Speichere...' : 'Bewerbung anlegen'}
-              </button>
-            </form>
-          </article>
-
-          <article className="card list-card">
-            <div className="card-title list-title">
-              <div>
-                <h2>Bewerbungen</h2>
+        {activeView === "overview" ? (
+            <>
+              <section className="hero">
+                <h1>Pipeline</h1>
                 <p>
-                  {applicationCountLabel}
-                  {lastUpdated ? ` · aktualisiert um ${lastUpdated.toLocaleTimeString('de-DE')}` : ''}
+                  {filteredApplications.length === 1
+                      ? "1 Bewerbung erfasst"
+                      : `${filteredApplications.length} Bewerbungen erfasst`}
                 </p>
-              </div>
+              </section>
 
-              <button
-                  type="button"
-                  className="button-secondary"
-                  onClick={loadApplications}
-                  disabled={loading || submitting}
-              >
-                {loading ? 'Lädt...' : 'Neu laden'}
-              </button>
-            </div>
+              <Stats applications={applications} />
 
-            {loading && <div className="empty-state">Daten werden geladen...</div>}
+              <Board
+                  applications={boardApplications}
+                  onOpenApplication={handleOpenApplication}
+                  onQuickMove={handleOpenQuickMove}
+                  onMoveApplication={handleMoveApplication}
+                  loading={loading}
+              />
 
-            {!loading && backendAvailable && applications.length === 0 && (
-                <div className="empty-state">
-                  <strong>Keine Bewerbungen vorhanden</strong>
-                  <span>Lege links den ersten Eintrag an.</span>
-                </div>
-            )}
+              <FinalApplications
+                  applications={finalApplications}
+                  onOpenApplication={handleOpenApplication}
+                  onQuickMove={handleOpenQuickMove}
+              />
+            </>
+        ) : null}
 
-            {!loading && !backendAvailable && (
-                <div className="empty-state">
-                  <strong>Keine Daten geladen</strong>
-                  <span>Das Backend ist aktuell nicht erreichbar.</span>
-                </div>
-            )}
+        {activeView === "statistics" ? <StatisticsView applications={applications} /> : null}
 
-            {!loading && applications.length > 0 && (
-                <div className="table-container">
-                  <table>
-                    <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Firma</th>
-                      <th>Position</th>
-                      <th>Aktion</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {applications.map((application) => (
-                        <tr key={application.id}>
-                          <td>
-                            <span className="id-pill">#{application.id}</span>
-                          </td>
-                          <td>{application.company}</td>
-                          <td>{application.position}</td>
-                          <td>
-                            <button
-                                type="button"
-                                className="delete-button"
-                                onClick={() => deleteApplication(application.id)}
-                                disabled={deletingId === application.id || submitting}
-                            >
-                              {deletingId === application.id ? 'Löscht...' : `ID ${application.id} löschen`}
-                            </button>
-                          </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                  </table>
-                </div>
-            )}
-          </article>
-        </section>
+        {createModalOpen ? (
+            <NewApplicationModal
+                onClose={handleCloseCreateModal}
+                onCreateApplication={handleCreateApplication}
+            />
+        ) : null}
+
+        {selectedApplication ? (
+            <ApplicationDrawer
+                application={selectedApplication}
+                onClose={handleCloseDrawer}
+                onUpdateApplication={handleUpdateApplication}
+                onDeleteApplication={handleDeleteApplication}
+                onUndoLastStatusChange={handleUndoLastStatusChange}
+            />
+        ) : null}
+
+        {quickMoveApplication ? (
+            <QuickMoveMenu
+                application={quickMoveApplication}
+                allowedStatuses={allowedQuickMoveStatuses}
+                onMove={handleQuickMove}
+                onClose={handleCloseQuickMove}
+                onDelete={() => handleDeleteApplication(quickMoveApplication)}
+            />
+        ) : null}
       </main>
-  )
+  );
 }
-
-export default App
