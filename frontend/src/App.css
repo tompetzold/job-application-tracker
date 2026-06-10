@@ -39,16 +39,19 @@
     white-space: nowrap;
 }
 
-.brand-icon {
+.brand-icon,
+.brand-mark {
     position: relative;
     width: 30px;
     height: 30px;
     flex-shrink: 0;
     border-radius: 10px;
     background: #111111;
+    color: transparent;
 }
 
-.brand-icon::after {
+.brand-icon::after,
+.brand-mark::after {
     position: absolute;
     content: "";
     width: 8px;
@@ -59,13 +62,15 @@
     background: #ffffff;
 }
 
-.navigation {
+.navigation,
+.main-nav {
     display: flex;
     align-items: center;
     gap: 28px;
 }
 
-.navigation-link {
+.navigation-link,
+.main-nav button {
     border: 0;
     background: transparent;
     color: #71717a;
@@ -76,7 +81,8 @@
     white-space: nowrap;
 }
 
-.navigation-link.active {
+.navigation-link.active,
+.main-nav button.active {
     color: #111111;
 }
 
@@ -87,7 +93,8 @@
     gap: 14px;
 }
 
-.backend-pill {
+.backend-pill,
+.source-badge {
     display: inline-flex;
     align-items: center;
     border-radius: 999px;
@@ -98,17 +105,26 @@
     white-space: nowrap;
 }
 
-.backend-pill[data-source="backend"] {
+.backend-pill[data-source="backend"],
+.backend-pill[data-source="mock"],
+.source-badge,
+.source-badge.backend {
     background: #dcfce7;
     color: #166534;
 }
 
-.backend-pill[data-source="mock"] {
-    background: #fef3c7;
-    color: #92400e;
+.source-badge.loading {
+    background: #f4f4f5;
+    color: #71717a;
 }
 
-.search-box {
+.source-badge.offline {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.search-box,
+.search-field {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -118,13 +134,15 @@
     padding: 0 14px;
 }
 
-.search-box span {
+.search-box span,
+.search-field span {
     color: #71717a;
     font-size: 22px;
     line-height: 1;
 }
 
-.search-box input {
+.search-box input,
+.search-field input {
     width: 100%;
     border: 0;
     background: transparent;
@@ -135,7 +153,8 @@
     outline: none;
 }
 
-.search-box input::placeholder {
+.search-box input::placeholder,
+.search-field input::placeholder {
     color: #a1a1aa;
 }
 
@@ -454,7 +473,7 @@ button {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 46px;
     gap: 6px;
-    min-height: 150px;
+    min-height: 158px;
     border: 2px solid #e5e5e5;
     border-radius: 18px;
     background: #ffffff;
@@ -486,11 +505,11 @@ button {
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 22px;
+    gap: 10px;
     border: 0;
     background: transparent;
     text-align: left;
-    padding: 26px 0 26px 30px;
+    padding: 24px 0 24px 30px;
 }
 
 .application-card-content:hover {
@@ -525,15 +544,24 @@ button {
     white-space: nowrap;
 }
 
-.card-meta-line {
+.card-meta-line,
+.card-date-line {
     min-height: 18px;
-    color: #71717a;
-    font-size: 14px;
-    font-weight: 760;
+    font-size: 13px;
     line-height: 1.3;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.card-meta-line {
+    color: #71717a;
+    font-weight: 760;
+}
+
+.card-date-line {
+    color: #111111;
+    font-weight: 820;
 }
 
 .card-menu-button {
@@ -577,7 +605,7 @@ button {
 }
 
 .modal-card {
-    width: min(620px, 100%);
+    width: min(920px, 100%);
     max-height: calc(100vh - 48px);
     overflow: auto;
     border-radius: 18px;
@@ -618,14 +646,16 @@ button {
 }
 
 .application-form label,
-.drawer-form label {
+.drawer-form label,
+.form-field {
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
 .application-form label span,
-.drawer-form label span {
+.drawer-form label span,
+.form-field span {
     color: #111111;
     font-size: 14px;
     font-weight: 740;
@@ -661,6 +691,17 @@ button {
     border-color: #111111;
 }
 
+.form-field.is-recommended input {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.field-hint {
+    color: #2563eb;
+    font-size: 12px;
+    font-weight: 740;
+}
+
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -689,6 +730,27 @@ button {
     border: 1px solid #fecaca;
     background: #fef2f2;
     color: #991b1b;
+}
+
+.status-recommendation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border: 1px solid #bfdbfe;
+    border-radius: 14px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 12px 14px;
+}
+
+.status-recommendation strong {
+    font-size: 13px;
+    font-weight: 850;
+}
+
+.status-recommendation span {
+    font-size: 13px;
+    line-height: 1.4;
 }
 
 .modal-actions {
@@ -1098,6 +1160,84 @@ button {
     font-size: 13px;
 }
 
+.autocomplete-field {
+    position: relative;
+}
+
+.autocomplete-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.autocomplete-wrapper input {
+    position: relative;
+    z-index: 2;
+    background: #ffffff;
+}
+
+.autocomplete-loading {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    z-index: 4;
+    transform: translateY(-50%);
+    color: #a1a1aa;
+    font-size: 12px;
+    font-weight: 720;
+    pointer-events: none;
+}
+
+.autocomplete-menu {
+    position: absolute;
+    z-index: 90;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    display: flex;
+    max-height: 260px;
+    flex-direction: column;
+    overflow: auto;
+    border: 1px solid #e4e4e7;
+    border-radius: 14px;
+    background: #ffffff;
+    padding: 6px;
+    box-shadow: 0 18px 46px rgba(17, 17, 17, 0.16);
+}
+
+.autocomplete-option {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+    border: 0;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #111111;
+    padding: 10px 11px;
+    text-align: left;
+    box-shadow: none;
+}
+
+.autocomplete-option:hover,
+.autocomplete-option.active {
+    background: #f4f4f5;
+}
+
+.autocomplete-option strong {
+    color: #111111;
+    font-size: 14px;
+    font-weight: 780;
+    line-height: 1.25;
+}
+
+.autocomplete-option small {
+    color: #71717a;
+    font-size: 12px;
+    font-weight: 680;
+    line-height: 1.25;
+}
+
 @media (max-width: 1180px) {
     :root {
         --page-padding: 24px;
@@ -1111,12 +1251,14 @@ button {
     }
 
     .navigation,
+    .main-nav,
     .header-actions {
         flex-wrap: wrap;
         justify-content: flex-start;
     }
 
-    .search-box {
+    .search-box,
+    .search-field {
         width: min(100%, 420px);
     }
 

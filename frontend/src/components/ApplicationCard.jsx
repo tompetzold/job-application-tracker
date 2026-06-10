@@ -1,6 +1,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { STATUS_COLORS } from "../constants/applicationStatus";
+import { getRelevantDateMeta } from "../utils/applicationDates";
 
 function normalizeText(value) {
     if (typeof value !== "string") {
@@ -39,6 +40,7 @@ export default function ApplicationCard({ application, onOpen, onQuickMove, isOv
     });
 
     const cardMeta = getCardMeta(application);
+    const dateMeta = getRelevantDateMeta(application);
     const statusColor = STATUS_COLORS[application.status] ?? "#e5e5e5";
 
     const cardStyle = {
@@ -84,6 +86,7 @@ export default function ApplicationCard({ application, onOpen, onQuickMove, isOv
                 </div>
 
                 {cardMeta ? <div className="card-meta-line">{cardMeta}</div> : null}
+                {dateMeta ? <div className="card-date-line">{dateMeta}</div> : null}
             </button>
 
             <button

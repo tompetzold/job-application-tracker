@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import AutocompleteInput from "./AutocompleteInput";
 
 const SALARY_MODES = {
   NONE: "NONE",
@@ -8,6 +9,7 @@ const SALARY_MODES = {
 
 const SALARY_CURRENCY = "EUR";
 const SALARY_PERIOD = "YEAR";
+const DEFAULT_DEADLINE_TIME = "23:59";
 
 function normalizeText(value) {
   if (typeof value !== "string") {
@@ -67,7 +69,48 @@ function formatSalaryPreview({ salaryMode, salaryAmount, salaryMin, salaryMax })
   return "";
 }
 
-export default function NewApplicationModal({ onClose, onCreateApplication }) {
+function getTodayWithDefaultDeadlineTime() {
+  const now = new Date();
+  const year = String(now.getFullYear());
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}T${DEFAULT_DEADLINE_TIME}`;
+}
+
+function normalizeDeadlineValue(value) {
+  if (!value) {
+    return "";
+  }
+
+  if (!value.includes("T")) {
+    return `${value}T${DEFAULT_DEADLINE_TIME}`;
+  }
+
+  const [date, time] = value.split("T");
+
+  if (!date) {
+    return "";
+  }
+
+  if (!time) {
+    return `${date}T${DEFAULT_DEADLINE_TIME}`;
+  }
+
+  return `${date}T${time.slice(0, 5)}`;
+}
+
+function deadlineHasExplicitUserTime(value) {
+  if (!value || !value.includes("T")) {
+    return false;
+  }
+
+  const time = value.split("T")[1]?.slice(0, 5);
+
+  return Boolean(time && time !== DEFAULT_DEADLINE_TIME);
+}
+
+export default function NewApplicationModal({ onClose, onCreateApplication, onCreate }) {
   const [company, setCompany] = useState("");
   const [position, setPosition] = useState("");
   const [location, setLocation] = useState("");
@@ -84,17 +127,15 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
   const normalizedCompany = normalizeText(company);
   const normalizedPosition = normalizeText(position);
 
-  const companyError = submitted && normalizedCompany.length === 0;
-  const positionError = submitted && normalizedPosition.length === 0;
+  const companyError = submitted && normalizedCompany.length === 0 ? "Firma ist ein Pflichtfeld." : "";
+  const positionError = submitted && normalizedPosition.length === 0 ? "Position ist ein Pflichtfeld." : "";
 
-  const salaryPreview = useMemo(() => {
-    return formatSalaryPreview({
-      salaryMode,
-      salaryAmount: normalizeNumber(salaryAmount),
-      salaryMin: normalizeNumber(salaryMin),
-      salaryMax: normalizeNumber(salaryMax),
-    });
-  }, [salaryMode, salaryAmount, salaryMin, salaryMax]);
+  const salaryPreview = formatSalaryPreview({
+    salaryMode,
+    salaryAmount: normalizeNumber(salaryAmount),
+    salaryMin: normalizeNumber(salaryMin),
+    salaryMax: normalizeNumber(salaryMax),
+  });
 
   function resetSalaryFields(nextSalaryMode) {
     setSalaryMode(nextSalaryMode);
@@ -102,6 +143,16 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
     setSalaryMin("");
     setSalaryMax("");
     setSubmitError("");
+  }
+
+  function handleDeadlineFocus() {
+    if (!applicationDeadline) {
+      setApplicationDeadline(getTodayWithDefaultDeadlineTime());
+    }
+  }
+
+  function handleDeadlineChange(event) {
+    setApplicationDeadline(normalizeDeadlineValue(event.target.value));
   }
 
   async function handleSubmit(event) {
@@ -113,10 +164,14 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
       return;
     }
 
-    if (typeof onCreateApplication !== "function") {
-      setSubmitError("Create-Handler fehlt.");
+    const createHandler = onCreateApplication ?? onCreate;
+
+    if (typeof createHandler !== "function") {
+      setSubmitError("Create-Handler fehlt. Übergib im Parent onCreateApplication oder onCreate.");
       return;
     }
+
+    const normalizedDeadline = normalizeDeadlineValue(applicationDeadline);
 
     const payload = {
       company: normalizedCompany,
@@ -131,14 +186,15 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
       salaryCurrency: SALARY_CURRENCY,
       salaryPeriod: SALARY_PERIOD,
       salary: salaryPreview,
-      applicationDeadline,
+      applicationDeadline: normalizedDeadline,
+      applicationDeadlineHasExplicitTime: deadlineHasExplicitUserTime(normalizedDeadline),
       nextAction: "",
       notes: normalizeText(notes),
     };
 
     try {
       setIsSubmitting(true);
-      await onCreateApplication(payload);
+      await createHandler(payload);
       onClose();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Bewerbung konnte nicht angelegt werden.");
@@ -149,7 +205,12 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
 
   return (
       <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
-        <section className="modal-card" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+        <section
+            className="modal-card"
+            role="dialog"
+            aria-modal="true"
+            onMouseDown={(event) => event.stopPropagation()}
+        >
           <div className="modal-header">
             <div>
               <h2>Neue Bewerbung</h2>
@@ -170,47 +231,42 @@ export default function NewApplicationModal({ onClose, onCreateApplication }) {
             ) : null}
 
             <div className="form-grid">
-              <label>
-                <span>Firma *</span>
-                <input
-                    value={company}
-                    onChange={(event) => setCompany(event.target.value)}
-                    type="text"
-                    placeholder="z. B. Stripe"
-                    aria-invalid={companyError}
-                />
-                {companyError ? <small className="field-error">Firma ist ein Pflichtfeld.</small> : null}
-              </label>
+              <AutocompleteInput
+                  label="Firma"
+                  value={company}
+                  onChange={setCompany}
+                  source="companies"
+                  placeholder="z. B. SAP"
+                  required
+                  error={companyError}
+              />
 
-              <label>
-                <span>Position *</span>
-                <input
-                    value={position}
-                    onChange={(event) => setPosition(event.target.value)}
-                    type="text"
-                    placeholder="z. B. Design Engineer"
-                    aria-invalid={positionError}
-                />
-                {positionError ? <small className="field-error">Position ist ein Pflichtfeld.</small> : null}
-              </label>
+              <AutocompleteInput
+                  label="Position"
+                  value={position}
+                  onChange={setPosition}
+                  source="positions"
+                  placeholder="z. B. Softwareentwickler"
+                  required
+                  error={positionError}
+              />
             </div>
 
             <div className="form-grid">
-              <label>
-                <span>Standort</span>
-                <input
-                    value={location}
-                    onChange={(event) => setLocation(event.target.value)}
-                    type="text"
-                    placeholder="z. B. Remote, Berlin, München"
-                />
-              </label>
+              <AutocompleteInput
+                  label="Standort"
+                  value={location}
+                  onChange={setLocation}
+                  source="locations"
+                  placeholder="z. B. München"
+              />
 
               <label>
                 <span>Bewerbungsdeadline</span>
                 <input
                     value={applicationDeadline}
-                    onChange={(event) => setApplicationDeadline(event.target.value)}
+                    onFocus={handleDeadlineFocus}
+                    onChange={handleDeadlineChange}
                     type="datetime-local"
                 />
               </label>

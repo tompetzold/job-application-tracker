@@ -1,0 +1,98 @@
+{
+  "applications": [
+    {
+      "id": "b4a74cc8-47eb-45d6-9041-97ef8062177e",
+      "company": "Sap",
+      "position": "Gooner",
+      "status": "APPLIED",
+      "phase": "",
+      "location": "München",
+      "salaryMode": "EXACT",
+      "salaryAmount": 55,
+      "salaryMin": null,
+      "salaryMax": null,
+      "salaryCurrency": "EUR",
+      "salaryPeriod": "YEAR",
+      "salary": "55k €",
+      "applicationDeadline": "",
+      "nextAction": "",
+      "notes": "",
+      "createdAt": "2026-06-10T08:24:21.291Z",
+      "updatedAt": "2026-06-10T14:21:02.168Z",
+      "history": [
+        {
+          "id": "599e87f2-5cc1-4a67-b4da-18bc495f9ba4",
+          "type": "STATUS_CHANGE_UNDONE",
+          "previousStatus": "INTERVIEW",
+          "newStatus": "APPLIED",
+          "text": "Statusänderung rückgängig gemacht von \"INTERVIEW\" zu \"APPLIED\"",
+          "createdAt": "2026-06-10T14:21:02.168Z",
+          "undoneAt": null
+        },
+        {
+          "id": "67cd9b15-a6fa-43d2-8623-e02a7810116b",
+          "type": "STATUS_CHANGE_UNDONE",
+          "previousStatus": "OFFER",
+          "newStatus": "INTERVIEW",
+          "text": "Statusänderung rückgängig gemacht von \"OFFER\" zu \"INTERVIEW\"",
+          "createdAt": "2026-06-10T14:20:52.602Z",
+          "undoneAt": null
+        },
+        {
+          "id": "8135dceb-9aa8-4a93-a7ea-6587cadcdb34",
+          "type": "STATUS_CHANGED",
+          "previousStatus": "INTERVIEW",
+          "newStatus": "OFFER",
+          "text": "Status geändert von \"INTERVIEW\" zu \"OFFER\"",
+          "createdAt": "2026-06-10T14:20:49.005Z",
+          "undoneAt": "2026-06-10T14:20:52.601Z"
+        },
+        {
+          "id": "c2fb314f-bf38-4f35-9710-ba5b7daa65ce",
+          "type": "STATUS_CHANGE_UNDONE",
+          "previousStatus": "OFFER",
+          "newStatus": "INTERVIEW",
+          "text": "Statusänderung rückgängig gemacht von \"OFFER\" zu \"INTERVIEW\"",
+          "createdAt": "2026-06-10T08:55:39.303Z",
+          "undoneAt": null
+        },
+        {
+          "id": "f1b01763-f721-4708-a657-94513327ae62",
+          "type": "STATUS_CHANGED",
+          "previousStatus": "INTERVIEW",
+          "newStatus": "OFFER",
+          "text": "Status geändert von \"INTERVIEW\" zu \"OFFER\"",
+          "createdAt": "2026-06-10T08:55:32.261Z",
+          "undoneAt": "2026-06-10T08:55:39.303Z"
+        },
+        {
+          "id": "5a4f2c7b-c7d9-4586-bfad-8370fe70b886",
+          "type": "STATUS_CHANGED",
+          "previousStatus": "APPLIED",
+          "newStatus": "INTERVIEW",
+          "text": "Status geändert von \"APPLIED\" zu \"INTERVIEW\"",
+          "createdAt": "2026-06-10T08:50:34.973Z",
+          "undoneAt": "2026-06-10T14:21:02.168Z"
+        },
+        {
+          "id": "b8edb8f6-8cbf-45f8-b724-afc69c3d2f25",
+          "type": "STATUS_CHANGED",
+          "previousStatus": "DRAFT",
+          "newStatus": "APPLIED",
+          "text": "Status geändert von \"DRAFT\" zu \"APPLIED\"",
+          "createdAt": "2026-06-10T08:50:29.380Z",
+          "undoneAt": null
+        },
+        {
+          "id": "3a3fe70e-62b4-456f-9617-3098969fe0a1",
+          "type": "APPLICATION_CREATED",
+          "previousStatus": null,
+          "newStatus": "DRAFT",
+          "text": "Bewerbung erstellt als Entwurf",
+          "createdAt": "2026-06-10T08:24:21.291Z",
+          "undoneAt": null
+        }
+      ]
+    }
+  ]
+}

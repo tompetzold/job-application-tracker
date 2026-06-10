@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "mock:api": "node mock-backend/mock-server.js",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"

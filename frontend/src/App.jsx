@@ -9,6 +9,7 @@ import Stats from "./components/Stats";
 import StatisticsView from "./components/StatisticsView";
 import FinalApplications from "./components/FinalApplications";
 import {
+  pingBackend,
   fetchApplications,
   createApplication,
   updateApplication,
@@ -69,9 +70,18 @@ function replaceApplication(applications, updatedApplication) {
   });
 }
 
+function getApiErrorMessage(error) {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+
+  return "Mocked Backend ist nicht erreichbar.";
+}
+
 export default function App() {
   const [applications, setApplications] = useState([]);
-  const [dataSource, setDataSource] = useState("mock");
+  const [dataSource, setDataSource] = useState("loading");
+  const [apiError, setApiError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeView, setActiveView] = useState("overview");
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -96,10 +106,24 @@ export default function App() {
   }, [filteredApplications]);
 
   async function loadApplications() {
-    const result = await fetchApplications();
-    setApplications(result.data);
-    setDataSource(result.source);
-    setLoading(false);
+    try {
+      setLoading(true);
+      setApiError("");
+      setDataSource("loading");
+
+      await pingBackend();
+
+      const result = await fetchApplications();
+
+      setApplications(result.data);
+      setDataSource(result.source);
+    } catch (error) {
+      setApplications([]);
+      setDataSource("mock-backend-offline");
+      setApiError(getApiErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function handleCreateApplication(payload) {
@@ -110,6 +134,7 @@ export default function App() {
     });
 
     setDataSource(result.source);
+    setApiError("");
   }
 
   async function handleUpdateApplication(id, payload) {
@@ -121,6 +146,7 @@ export default function App() {
 
     setSelectedApplication(result.data);
     setDataSource(result.source);
+    setApiError("");
   }
 
   async function handleMoveApplication(application, targetStatus) {
@@ -151,6 +177,7 @@ export default function App() {
     });
 
     setDataSource(result.source);
+    setApiError("");
   }
 
   async function handleUndoLastStatusChange(application) {
@@ -166,6 +193,7 @@ export default function App() {
 
     setSelectedApplication(result.data);
     setDataSource(result.source);
+    setApiError("");
   }
 
   async function handleDeleteApplication(application) {
@@ -184,6 +212,7 @@ export default function App() {
     setSelectedApplication(null);
     setQuickMoveApplication(null);
     setDataSource(result.source);
+    setApiError("");
   }
 
   function handleOpenApplication(application) {
@@ -233,6 +262,7 @@ export default function App() {
             activeView={activeView}
             onChangeView={setActiveView}
             dataSource={dataSource}
+            apiError={apiError}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             onCreateApplication={handleOpenCreateModal}

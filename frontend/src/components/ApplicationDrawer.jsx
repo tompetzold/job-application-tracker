@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import {
-  APPLICATION_STATUSES,
-  STATUS_LABELS,
-} from "../constants/applicationStatus";
+import AutocompleteInput from "./AutocompleteInput";
+import { getTimeConstraintConfig } from "../constants/applicationStatus";
+import { formatDateTime } from "../utils/applicationDates";
 
 function normalizeText(value) {
   if (typeof value !== "string") {
@@ -10,26 +9,6 @@ function normalizeText(value) {
   }
 
   return value.trim();
-}
-
-function formatDateTime(value) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 function getLatestUndoableStatusChange(application) {
@@ -40,6 +19,46 @@ function getLatestUndoableStatusChange(application) {
   });
 }
 
+function toDateTimeLocalInputValue(value, defaultTime = "23:59") {
+  if (!value || typeof value !== "string") {
+    return "";
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) {
+    return value.slice(0, 16);
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value}T${defaultTime}`;
+  }
+
+  return value;
+}
+
+function getInitialTimeConstraintValue(application, timeConstraint) {
+  if (!timeConstraint) {
+    return "";
+  }
+
+  if (timeConstraint.field === "applicationDeadline") {
+    return toDateTimeLocalInputValue(application.applicationDeadline, timeConstraint.defaultTime ?? "23:59");
+  }
+
+  return toDateTimeLocalInputValue(application.nextAction, timeConstraint.defaultTime ?? "23:59");
+}
+
+function normalizeTimeConstraintValue(value, timeConstraint) {
+  if (!timeConstraint || !value) {
+    return "";
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return `${value}T${timeConstraint.defaultTime ?? "23:59"}`;
+  }
+
+  return value;
+}
+
 export default function ApplicationDrawer({
                                             application,
                                             onClose,
@@ -47,13 +66,15 @@ export default function ApplicationDrawer({
                                             onDeleteApplication,
                                             onUndoLastStatusChange,
                                           }) {
+  const timeConstraint = getTimeConstraintConfig(application.status);
+
   const [company, setCompany] = useState(application.company ?? "");
   const [position, setPosition] = useState(application.position ?? "");
-  const [status, setStatus] = useState(application.status ?? "DRAFT");
-  const [phase, setPhase] = useState(application.phase ?? "");
   const [location, setLocation] = useState(application.location ?? "");
   const [salary, setSalary] = useState(application.salary ?? "");
-  const [nextAction, setNextAction] = useState(application.nextAction ?? "");
+  const [timeConstraintValue, setTimeConstraintValue] = useState(
+      getInitialTimeConstraintValue(application, timeConstraint),
+  );
   const [notes, setNotes] = useState(application.notes ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [isUndoing, setIsUndoing] = useState(false);
@@ -64,6 +85,30 @@ export default function ApplicationDrawer({
   }, [application]);
 
   const canUndoLastStatusChange = Boolean(latestUndoableStatusChange);
+  const shouldHighlightTimeConstraint = Boolean(timeConstraint && !timeConstraintValue);
+
+  function buildTimeConstraintPayload() {
+    const normalizedValue = normalizeTimeConstraintValue(timeConstraintValue, timeConstraint);
+
+    if (!timeConstraint) {
+      return {
+        applicationDeadline: "",
+        nextAction: "",
+      };
+    }
+
+    if (timeConstraint.field === "applicationDeadline") {
+      return {
+        applicationDeadline: normalizedValue,
+        nextAction: "",
+      };
+    }
+
+    return {
+      applicationDeadline: "",
+      nextAction: normalizedValue,
+    };
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -80,12 +125,10 @@ export default function ApplicationDrawer({
     const payload = {
       company: normalizedCompany,
       position: normalizedPosition,
-      status,
-      phase: normalizeText(phase),
       location: normalizeText(location),
       salary: normalizeText(salary),
-      nextAction,
       notes: normalizeText(notes),
+      ...buildTimeConstraintPayload(),
     };
 
     try {
@@ -164,41 +207,41 @@ export default function ApplicationDrawer({
                 </div>
             ) : null}
 
-            <div className="form-grid">
-              <label>
-                <span>Firma</span>
-                <input value={company} onChange={(event) => setCompany(event.target.value)} type="text" />
-              </label>
+            {timeConstraint ? (
+                <div className="status-recommendation">
+                  <strong>{timeConstraint.label}</strong>
+                  <span>{timeConstraint.recommendation}</span>
+                </div>
+            ) : null}
 
-              <label>
-                <span>Position</span>
-                <input value={position} onChange={(event) => setPosition(event.target.value)} type="text" />
-              </label>
+            <div className="form-grid">
+              <AutocompleteInput
+                  label="Firma"
+                  value={company}
+                  onChange={setCompany}
+                  source="companies"
+                  placeholder="z. B. SAP"
+                  required
+              />
+
+              <AutocompleteInput
+                  label="Position"
+                  value={position}
+                  onChange={setPosition}
+                  source="positions"
+                  placeholder="z. B. Softwareentwickler"
+                  required
+              />
             </div>
 
             <div className="form-grid">
-              <label>
-                <span>Status</span>
-                <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                  {APPLICATION_STATUSES.map((applicationStatus) => (
-                      <option key={applicationStatus} value={applicationStatus}>
-                        {STATUS_LABELS[applicationStatus] ?? applicationStatus}
-                      </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <span>Phase</span>
-                <input value={phase} onChange={(event) => setPhase(event.target.value)} type="text" />
-              </label>
-            </div>
-
-            <div className="form-grid">
-              <label>
-                <span>Standort</span>
-                <input value={location} onChange={(event) => setLocation(event.target.value)} type="text" />
-              </label>
+              <AutocompleteInput
+                  label="Standort"
+                  value={location}
+                  onChange={setLocation}
+                  source="locations"
+                  placeholder="z. B. München"
+              />
 
               <label>
                 <span>Gehalt</span>
@@ -206,10 +249,19 @@ export default function ApplicationDrawer({
               </label>
             </div>
 
-            <label>
-              <span>Nächste Aktion</span>
-              <input value={nextAction} onChange={(event) => setNextAction(event.target.value)} type="datetime-local" />
-            </label>
+            {timeConstraint ? (
+                <label className={shouldHighlightTimeConstraint ? "form-field is-recommended" : "form-field"}>
+                  <span>{timeConstraint.label}</span>
+                  <input
+                      value={timeConstraintValue}
+                      onChange={(event) => setTimeConstraintValue(event.target.value)}
+                      type={timeConstraint.inputType}
+                  />
+                  {shouldHighlightTimeConstraint ? (
+                      <small className="field-hint">{timeConstraint.recommendation}</small>
+                  ) : null}
+                </label>
+            ) : null}
 
             <label>
               <span>Notizen</span>

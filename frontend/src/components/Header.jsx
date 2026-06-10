@@ -1,76 +1,89 @@
+function getDataSourceLabel(dataSource) {
+    if (dataSource === "mock-backend") {
+        return "MOCK";
+    }
+
+    if (dataSource === "mock-backend-offline") {
+        return "Mocked Backend Offline";
+    }
+
+    if (dataSource === "backend") {
+        return "BACKEND";
+    }
+
+    if (dataSource === "loading") {
+        return "Lädt...";
+    }
+
+    return "MOCK";
+}
+
+function getDataSourceClassName(dataSource) {
+    if (dataSource === "mock-backend-offline") {
+        return "source-badge offline";
+    }
+
+    if (dataSource === "backend") {
+        return "source-badge backend";
+    }
+
+    if (dataSource === "loading") {
+        return "source-badge loading";
+    }
+
+    return "source-badge";
+}
+
 export default function Header({
                                    activeView,
                                    onChangeView,
                                    dataSource,
+                                   apiError,
                                    searchTerm,
                                    onSearchChange,
                                    onCreateApplication,
                                }) {
-    function handleOverviewClick() {
-        if (typeof onChangeView === "function") {
-            onChangeView("overview");
-        }
-    }
-
-    function handleStatisticsClick() {
-        if (typeof onChangeView === "function") {
-            onChangeView("statistics");
-        }
-    }
-
-    function handleSearchChange(event) {
-        if (typeof onSearchChange === "function") {
-            onSearchChange(event.target.value);
-        }
-    }
-
-    function handleCreateApplicationClick() {
-        if (typeof onCreateApplication === "function") {
-            onCreateApplication();
-        }
-    }
-
     return (
         <header className="app-header">
             <div className="brand">
-                <span className="brand-icon" aria-hidden="true"></span>
-                <span>Bewerbungstracker</span>
+                <div className="brand-mark">●</div>
+                <strong>Bewerbungstracker</strong>
             </div>
 
-            <nav className="navigation" aria-label="Hauptnavigation">
+            <nav className="main-nav">
                 <button
                     type="button"
-                    className={activeView === "overview" ? "navigation-link active" : "navigation-link"}
-                    onClick={handleOverviewClick}
+                    className={activeView === "overview" ? "active" : ""}
+                    onClick={() => onChangeView("overview")}
                 >
                     Übersicht
                 </button>
 
                 <button
                     type="button"
-                    className={activeView === "statistics" ? "navigation-link active" : "navigation-link"}
-                    onClick={handleStatisticsClick}
+                    className={activeView === "statistics" ? "active" : ""}
+                    onClick={() => onChangeView("statistics")}
                 >
                     Statistiken
                 </button>
             </nav>
 
             <div className="header-actions">
-        <span className="backend-pill" data-source={dataSource}>
-          {dataSource === "backend" ? "Backend" : "Mock"}
+        <span className={getDataSourceClassName(dataSource)} title={apiError || undefined}>
+          {getDataSourceLabel(dataSource)}
         </span>
 
-                <label className="search-box">
-                    <span aria-hidden="true">⌕</span>
+                <label className="search-field">
+                    <span>⌕</span>
                     <input
                         value={searchTerm}
-                        onChange={handleSearchChange}
+                        onChange={(event) => onSearchChange(event.target.value)}
                         type="search"
                         placeholder="Schnellsuche..."
                     />
                 </label>
 
-                <button type="button" className="primary-button" onClick={handleCreateApplicationClick}>
+                <button type="button" className="primary-button compact" onClick={onCreateApplication}>
                     + Neue Bewerbung
                 </button>
             </div>

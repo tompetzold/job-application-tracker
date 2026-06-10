@@ -57,13 +57,9 @@ export default function ApplicationColumn({
             </header>
 
             <div className="column-body">
-                {loading ? (
-                    <div className="empty-column">Lädt...</div>
-                ) : null}
+                {loading ? <div className="empty-column">Lädt...</div> : null}
 
-                {!loading && applications.length === 0 ? (
-                    <div className="empty-column">Leer</div>
-                ) : null}
+                {!loading && applications.length === 0 ? <div className="empty-column">Leer</div> : null}
 
                 {!loading
                     ? applications.map((application) => (
