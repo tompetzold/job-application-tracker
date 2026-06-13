@@ -1,5 +1,6 @@
 package de.rwu.swa.bewerbungstracker.presentation;
 
+import de.rwu.swa.bewerbungstracker.business.Application;
 import de.rwu.swa.bewerbungstracker.business.ApplicationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,18 +29,30 @@ public class ApplicationController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ApplicationResponse create(@RequestBody ApplicationRequest request) {
-        return ApplicationResponse.from(
-                service.create(request.getCompany(), request.getPosition())
-        );
+        Application input = new Application();
+        input.setCompany(request.getCompany());
+        input.setPosition(request.getPosition());
+        input.setLocation(request.getLocation());
+        input.setSalaryMode(request.getSalaryMode());
+        input.setSalaryAmount(request.getSalaryAmount());
+        input.setSalaryMin(request.getSalaryMin());
+        input.setSalaryMax(request.getSalaryMax());
+        input.setSalaryCurrency(request.getSalaryCurrency());
+        input.setSalaryPeriod(request.getSalaryPeriod());
+        input.setApplicationDeadline(request.getApplicationDeadline());
+        input.setNotes(request.getNotes());
+
+        return ApplicationResponse.from(service.create(input));
     }
 
-    @GetMapping
-    public List<ApplicationResponse> findAll() {
-        return service.findAll().stream()
-                .map(ApplicationResponse::from)
-                .toList();
-    }
+    // @GetMapping
+    // public List<ApplicationResponse> findAll() {
+    //     return service.findAll().stream()
+    //             .map(ApplicationResponse::from)
+    //             .toList();
+    // }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
