@@ -1,5 +1,6 @@
 package de.rwu.swa.bewerbungstracker.persistence;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,7 +58,7 @@ public class ApplicationRepository {
         return input;
     }
 
-    private void saveHistory(Application input) {
+    public void saveHistory(Application input) {
         String historySql = """
                 INSERT INTO application_history (
                     id, application_id, type, previous_status, new_status, text, created_at, undone_at
@@ -157,18 +158,52 @@ public class ApplicationRepository {
                 application.getId()
         );
 
-        saveHistory(application);
         return application;
     }
 
-    // public List<Application> findAll() {
-    //     String sql = "SELECT id, company, position FROM applications ORDER BY id DESC";
-    //     return jdbc.query(sql, (rs, rowNum) -> new Application(
-    //             rs.getLong("id"),
-    //             rs.getString("company"),
-    //             rs.getString("position")
-    //     ));
-    // }
+    public List<Application> findAll() {
+    String sql = "SELECT * FROM applications ORDER BY id DESC";
+
+    List<Application> applications = jdbc.query(sql, (rs, rowNum) -> {
+        Application application = new Application(
+                rs.getLong("id"),
+                rs.getString("company"),
+                rs.getString("position"),
+                rs.getString("status"),
+                rs.getString("phase"),
+                rs.getString("location"),
+                rs.getString("salary_mode"),
+                rs.getObject("salary_amount", Double.class),
+                rs.getObject("salary_min", Double.class),
+                rs.getObject("salary_max", Double.class),
+                rs.getString("salary_currency"),
+                rs.getString("salary_period"),
+                rs.getString("salary"),
+                rs.getString("application_deadline"),
+                rs.getString("next_action"),
+                rs.getString("notes"),
+                rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toInstant(),
+                rs.getTimestamp("updated_at") == null ? null : rs.getTimestamp("updated_at").toInstant()
+        );
+        return application;
+    });
+
+    for (Application application : applications) {
+        String historySql = "SELECT * FROM application_history WHERE application_id = ? ORDER BY seq DESC";
+        List<StatusHistoryEntry> history = jdbc.query(historySql, (rs, rowNum) -> new StatusHistoryEntry(
+                rs.getString("id"),
+                rs.getString("type"),
+                rs.getString("previous_status"),
+                rs.getString("new_status"),
+                rs.getString("text"),
+                rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toInstant(),
+                rs.getTimestamp("undone_at") == null ? null : rs.getTimestamp("undone_at").toInstant()
+        ), application.getId());
+        application.setHistory(history);
+    }
+
+    return applications;
+}
 
     public boolean deleteById(Long id) {
         String sql = "DELETE FROM applications WHERE id = ?";

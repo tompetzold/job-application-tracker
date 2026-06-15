@@ -1,9 +1,5 @@
 package de.rwu.swa.bewerbungstracker.presentation;
 
-/**
- * Eingehende Nutzdaten zum Erstellen oder Bearbeiten einer Bewerbung.
- * Nicht alle Felder sind für jeden Endpunkt relevant.
- */
 public class ApplicationRequest {
 
     private String company;

@@ -1,7 +1,8 @@
 package de.rwu.swa.bewerbungstracker.presentation;
 
-import de.rwu.swa.bewerbungstracker.business.Application;
-import de.rwu.swa.bewerbungstracker.business.ApplicationService;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import de.rwu.swa.bewerbungstracker.business.Application;
+import de.rwu.swa.bewerbungstracker.business.ApplicationService;
 
 @CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 @RestController
@@ -47,12 +48,12 @@ public class ApplicationController {
         return ApplicationResponse.from(service.create(input));
     }
 
-    // @GetMapping
-    // public List<ApplicationResponse> findAll() {
-    //     return service.findAll().stream()
-    //             .map(ApplicationResponse::from)
-    //             .toList();
-    // }
+    @GetMapping
+    public List<ApplicationResponse> findAll() {
+        return service.findAll().stream()
+                .map(ApplicationResponse::from)
+                .toList();
+    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

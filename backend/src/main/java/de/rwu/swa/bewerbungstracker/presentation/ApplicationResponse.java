@@ -5,10 +5,6 @@ import java.util.List;
 
 import de.rwu.swa.bewerbungstracker.business.Application;
 
-/**
- * Ausgabeformat einer Bewerbung inklusive Verlauf.
- * Die Feldnamen entsprechen exakt dem vom Frontend erwarteten JSON.
- */
 public class ApplicationResponse {
 
     private Long id;

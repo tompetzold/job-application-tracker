@@ -2,9 +2,6 @@ package de.rwu.swa.bewerbungstracker.business;
 
 import java.time.Instant;
 
-/**
- * Einzelner Eintrag im Verlauf einer Bewerbung (Statuswechsel, Erstellung, Undo).
- */
 public class StatusHistoryEntry {
 
     private String id;

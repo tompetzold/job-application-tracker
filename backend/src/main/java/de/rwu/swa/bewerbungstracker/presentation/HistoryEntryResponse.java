@@ -1,12 +1,9 @@
 package de.rwu.swa.bewerbungstracker.presentation;
 
-import de.rwu.swa.bewerbungstracker.business.StatusHistoryEntry;
-
 import java.time.Instant;
 
-/**
- * Ausgabeformat eines einzelnen Verlaufseintrags.
- */
+import de.rwu.swa.bewerbungstracker.business.StatusHistoryEntry;
+
 public class HistoryEntryResponse {
 
     private String id;

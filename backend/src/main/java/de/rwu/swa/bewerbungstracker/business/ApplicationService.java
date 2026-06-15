@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import de.rwu.swa.bewerbungstracker.persistence.ApplicationRepository;
 
-
 @Service
 public class ApplicationService {
 
@@ -24,9 +23,9 @@ public class ApplicationService {
         this.repository = repository;
     }
 
-    // public List<Application> findAll() {
-    //     return repository.findAll();
-    // }
+    public List<Application> findAll() {
+        return repository.findAll();
+    }
 
     public Application create(Application input) {
         String company = normalizeText(input.getCompany());
@@ -52,7 +51,7 @@ public class ApplicationService {
         input.setId(null);
         input.setCompany(company);
         input.setPosition(position);
-        input.setStatus("DRAFT"); // Status muss noch implementiert werden, hier vorerst statisch
+        input.setStatus("DRAFT");
         input.setPhase("");
         input.setLocation(normalizeText(input.getLocation()));
         input.setSalaryMode(salaryMode);
@@ -95,6 +94,77 @@ public class ApplicationService {
         return repository.update(application);
     }
 
+    public Application undoLastStatusChange(Long id) {
+        Application application = repository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
+
+        StatusHistoryEntry lastChange = null;
+        for (StatusHistoryEntry entry : application.getHistory()) {
+            if ("STATUS_CHANGED".equals(entry.getType()) && entry.getUndoneAt() == null) {
+                lastChange = entry;
+                break;
+            }
+        }
+
+        if (lastChange == null) {
+            return application;
+        }
+
+        if (!application.getStatus().equals(lastChange.getNewStatus())) {
+           return application; 
+        }
+       
+        Instant now = Instant.now();
+        String currentStatus = application.getStatus();
+        String revertedStatus = lastChange.getPreviousStatus();
+
+        lastChange.setUndoneAt(now);
+
+        application.getHistory().add(0, new StatusHistoryEntry(
+                UUID.randomUUID().toString(),
+                "STATUS_CHANGE_UNDONE",
+                currentStatus,
+                revertedStatus,
+                "Statusänderung rückgängig gemacht von \"" + currentStatus + "\" zu \"" + revertedStatus + "\"",
+                now,
+                null));
+
+        application.setStatus(revertedStatus);
+        application.setUpdatedAt(now);
+        repository.update(application);
+        repository.saveHistory(application);
+        return application;
+    }
+
+    public Application updateStatus(Long id, Application status) {
+        Application application = repository.findById(id).orElseThrow(() -> new ApplicationNotFoundException(id));
+        String currentStatus = application.getStatus();
+        String newStatus = status.getStatus();
+
+        if (currentStatus.equals(newStatus)) {
+            return application;
+            }
+        if (!ApplicationStatus.validateStatusTransition(currentStatus, newStatus)) {
+            throw new IllegalArgumentException("Ungültiger Status-Übergang");
+        }
+
+        Instant now = Instant.now();
+
+        application.getHistory().add(0, new StatusHistoryEntry(
+                UUID.randomUUID().toString(),
+                "STATUS_CHANGED",
+                currentStatus,
+                newStatus,
+                "Status geändert von \"" + currentStatus + "\" zu \"" + newStatus + "\"",
+                now,
+                null));
+
+        application.setStatus(newStatus);
+        application.setUpdatedAt(now);
+        repository.update(application);
+        repository.saveHistory(application);
+        return application;
+    }
+
     public void deleteById(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("Ungültige Bewerbungs-ID");
@@ -107,18 +177,14 @@ public class ApplicationService {
         }
     }
 
-    private static String normalizeText(String value) { // Entfernt führende und folgende Leerzeichen, ersetzt null durch leeren String
+    private static String normalizeText(String value) {
         return value == null ? "" : value.trim();
     }
 
-    private static String orDefault(String value, String fallback) { // Gibt den Wert zurück, oder den Fallback, wenn der Wert null ist
+    private static String orDefault(String value, String fallback) {
         return value == null ? fallback : value;
     }
 
-    /**
-     * Bildet die formatierte Gehaltsanzeige analog zum Frontend
-     * (z. B. "55k €", "70k–90k €", "ab 70k €").
-     */
     private static String formatSalary(String salaryMode, Double amount, Double min, Double max) {
         if ("EXACT".equals(salaryMode)) {
             String formatted = formatSalaryAmount(amount);

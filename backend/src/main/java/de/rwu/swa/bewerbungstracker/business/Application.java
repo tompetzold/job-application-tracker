@@ -4,9 +4,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Domänenobjekt einer Bewerbung mit allen fachlichen Feldern und ihrem Verlauf.
- */
 public class Application {
 
     private Long id;
@@ -33,10 +30,11 @@ public class Application {
 
     private List<StatusHistoryEntry> history = new ArrayList<>();
 
-    public Application(String company, String position, String status,
+    public Application(Long id, String company, String position, String status,
                        String phase, String location, String salaryMode, Double salaryAmount,
                        Double salaryMin, Double salaryMax, String salaryCurrency, String salaryPeriod, String salary,
                        String applicationDeadline, String nextAction, String notes, Instant createdAt, Instant updatedAt) {
+        this.id = id;
         this.company = company;
         this.position = position;
         this.status = status;
