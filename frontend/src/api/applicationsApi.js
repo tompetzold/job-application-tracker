@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3001";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
 
 async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -26,7 +26,7 @@ export async function pingBackend() {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -39,7 +39,7 @@ export async function fetchApplications() {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -56,7 +56,7 @@ export async function createApplication(payload) {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -68,7 +68,7 @@ export async function updateApplicationStatus(id, status) {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -79,7 +79,7 @@ export async function undoLastStatusChange(id) {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -91,7 +91,7 @@ export async function updateApplication(id, payload) {
 
   return {
     data,
-    source: "mock-backend",
+    source: "backend",
   };
 }
 
@@ -101,6 +101,6 @@ export async function deleteApplication(id) {
   });
 
   return {
-    source: "mock-backend",
+    source: "backend",
   };
 }

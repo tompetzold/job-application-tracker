@@ -75,7 +75,7 @@ function getApiErrorMessage(error) {
     return error.message;
   }
 
-  return "Mocked Backend ist nicht erreichbar.";
+  return "Backend ist nicht erreichbar.";
 }
 
 export default function App() {
@@ -119,7 +119,7 @@ export default function App() {
       setDataSource(result.source);
     } catch (error) {
       setApplications([]);
-      setDataSource("mock-backend-offline");
+      setDataSource("backend-offline");
       setApiError(getApiErrorMessage(error));
     } finally {
       setLoading(false);

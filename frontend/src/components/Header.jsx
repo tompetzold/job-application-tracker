@@ -3,8 +3,8 @@ function getDataSourceLabel(dataSource) {
         return "MOCK";
     }
 
-    if (dataSource === "mock-backend-offline") {
-        return "Mocked Backend Offline";
+    if (dataSource === "backend-offline") {
+        return "Backend Offline";
     }
 
     if (dataSource === "backend") {
@@ -19,7 +19,7 @@ function getDataSourceLabel(dataSource) {
 }
 
 function getDataSourceClassName(dataSource) {
-    if (dataSource === "mock-backend-offline") {
+    if (dataSource === "backend-offline") {
         return "source-badge offline";
     }
 
