@@ -588,60 +588,76 @@ Gemeinsamer Start von Frontend, Backend und Datenbank. \\
 
 \newpage
 \section{Bausteinsicht}
-\subsection{Gesamtsystem}
+\label{sec:building-block-view}
 
-Das Gesamtsystem besteht aus einer React-Single-Page-Application, einem Spring-Boot-Backend und einer PostgreSQL-Datenbank. Statische Vorschlagsdaten werden durch das Frontend geladen und lokal ausgewertet.
+Die Bausteinsicht beschreibt die statische Zerlegung des Bewerbungstrackers.
+Dabei wird zunächst das Gesamtsystem betrachtet und anschließend das Backend als zentraler Baustein weiter zerlegt.
 
+
+% 5.1 - Ebene 1: Gesamtsystem
+\subsection{Ebene 1: Gesamtsystem}
+
+Das Gesamtsystem wird in Frontend, Backend, Datenbank und statische Vorschlagsdaten zerlegt.
+Diese Zerlegung folgt den unterschiedlichen Verantwortlichkeiten für Benutzerinteraktion, Geschäftslogik und Datenhaltung.
+
+\vspace{0.5cm}
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[node distance=1.3cm and 1.15cm]
-  \node[frontend,text width=3.7cm] (frontend) {React-Frontend\\App, Komponenten, API-Client, Vorschlagsdienst};
-  \node[backend,right=of frontend,text width=3.7cm] (backend) {Spring-Boot-Backend\\Presentation, Business, Persistence};
-  \node[database,right=of backend] (database) {PostgreSQL\\applications\\application\_history};
-  \node[filebox,below=1.2cm of frontend] (csv) {CSV-Vorschlagsdaten};
-
-  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
-  \draw[connection] (backend) -- node[above]{JDBC} (database);
-  \draw[connection] (csv) -- (frontend);
-\end{tikzpicture}
+\input{diagrams/05-bausteine-gesamtsystem.tex}
 \caption{Bausteine des Gesamtsystems}
 \label{fig:system-building-blocks}
 \end{figure}
 
-\begin{table}[H]
+\textbf{React-Frontend.}
+Das Frontend stellt die Benutzeroberfläche dar und verarbeitet die Eingaben des Nutzers.
+Es verwaltet den lokalen Anwendungszustand, führt die Suche und Statistikberechnung aus und greift über REST auf das Backend zu.
+
+\textbf{Spring-Boot-Backend.}
+Das Backend verarbeitet die REST-Anfragen des Frontends.
+Es führt die Geschäftsregeln aus und koordiniert den Zugriff auf die Datenbank.
+
+\textbf{PostgreSQL.}
+Die Datenbank speichert die Bewerbungen und die zugehörigen Historieneinträge dauerhaft.
+
+\textbf{CSV-Vorschlagsdaten.}
+Die statischen CSV-Dateien enthalten Vorschläge für Unternehmen, Positionen und Standorte.
+Sie werden durch den Vorschlagsdienst des Frontends geladen und lokal ausgewertet.
+
+
+% 5.2 - Ebene 2: Backend
+\newpage
+\subsection{Ebene 2: Backend}
+
+Das Backend wird in Präsentationsschicht, Geschäftslogikschicht und Persistenzschicht zerlegt.
+Die Abhängigkeiten zwischen den zentralen Bausteinen sind in Abbildung~\ref{fig:backend-building-blocks} dargestellt.
+
+\vspace{0.5cm}
+\begin{figure}[H]
 \centering
-\begin{tabularx}{\textwidth}{L{3.3cm} Y Y}
-\toprule
-\textbf{Baustein} & \textbf{Verantwortung} & \textbf{Schnittstellen} \\
-\midrule
-React-Frontend & Darstellung, Benutzerinteraktion, lokaler UI-Zustand, Suche und Statistikberechnung & HTTP-Aufrufe an die REST-API; Zugriff auf statische CSV-Dateien \\
-Spring-Boot-Backend & Fachliche Verarbeitung, Validierung und Koordination der Persistenz & REST/JSON nach außen; JDBC zur Datenbank \\
-PostgreSQL & Dauerhafte Speicherung der Bewerbungen und Statushistorie & PostgreSQL-Protokoll über JDBC \\
-CSV-Vorschlagsdaten & Vorschläge für Unternehmen, Positionen und Standorte & Statischer Dateizugriff durch das Frontend \\
-\bottomrule
-\end{tabularx}
-\caption{Blackbox-Beschreibung der Hauptbausteine}
-\label{tab:main-components}
-\end{table}
+\input{diagrams/05-backend-bausteine.tex}
+\caption{Wichtige Bausteine und Abhängigkeiten des Backends}
+\label{fig:backend-building-blocks}
+\end{figure}
 
-\subsection{Backend-Schichten}
+\textbf{Präsentationsschicht.}
+Der \texttt{ApplicationController} stellt die REST-Endpunkte bereit und delegiert eingehende Anfragen an den \texttt{ApplicationService}.
+Der \texttt{ApplicationMapper} und die Request- und Response-DTOs übernehmen die Umwandlung der übertragenen Daten.
 
-\begin{table}[H]
-\centering
-\begin{tabularx}{\textwidth}{L{3cm} L{5cm} Y}
-\toprule
-\textbf{Schicht} & \textbf{Elemente} & \textbf{Verantwortung} \\
-\midrule
-Präsentation & \texttt{ApplicationController}, \texttt{ApplicationRequest}, \texttt{ApplicationResponse}, \texttt{StatusChangeRequest}, \texttt{ApplicationMapper} & REST-Endpunkte, Datentransformation und Zuordnung fachlicher Fehler zu HTTP-Statuscodes. \\
-Geschäftslogik & \texttt{ApplicationService}, \texttt{ApplicationStatus}, \texttt{Application}, \texttt{StatusHistoryEntry} & Pflichtfeld- und Gehaltsvalidierung, Statusautomat, Historie und fachliche Standardwerte. \\
-Persistenz & \texttt{ApplicationRepository} & SQL-basierte CRUD-Operationen und Laden beziehungsweise Speichern der Historieneinträge. \\
-\bottomrule
-\end{tabularx}
-\caption{Whitebox-Beschreibung des Backends}
-\label{tab:backend-layers}
-\end{table}
+\textbf{Geschäftslogikschicht.}
+Der \texttt{ApplicationService} führt die fachlichen Anwendungsfälle aus.
+Die Domänenobjekte \texttt{Application} und \texttt{StatusHistoryEntry} bilden Bewerbungen und deren Historie ab.
+Die Klasse \texttt{ApplicationStatus} definiert die zulässigen Statusübergänge.
 
-\subsection{Zentrale Schnittstellen}
+\textbf{Persistenzschicht.}
+Das \texttt{ApplicationRepository} lädt und speichert Bewerbungen und Historieneinträge.
+Die SQL-Anweisungen werden über Spring JDBC und das \texttt{JdbcTemplate} ausgeführt.
+
+
+% 5.3 - Schnittstelle zwischen Frontend und Backend
+\newpage
+\subsection{Schnittstelle zwischen Frontend und Backend}
+
+Das Frontend greift ausschließlich über die REST-Schnittstelle auf das Backend zu.
 
 \begin{table}[H]
 \centering
@@ -650,29 +666,48 @@ Persistenz & \texttt{ApplicationRepository} & SQL-basierte CRUD-Operationen und 
 \toprule
 \textbf{Methode} & \textbf{Pfad} & \textbf{Zweck} \\
 \midrule
-GET & \path|/api/health| & Erreichbarkeit des Backends prüfen. \\
-GET & \path|/api/applications| & Alle Bewerbungen einschließlich Historie laden. \\
-POST & \path|/api/applications| & Neue Bewerbung mit initialem Status \texttt{DRAFT} erstellen. \\
-PUT & \path|/api/applications/{id}| & Inhalt einer bestehenden Bewerbung bearbeiten. \\
-PATCH & \path|/api/applications/{id}/status| & Fachlich zulässigen Statuswechsel durchführen. \\
-POST & \path|/api/applications/{id}/undo-last-status-change| & Letzte Statusänderung zurücksetzen. \\
-DELETE & \path|/api/applications/{id}| & Bewerbung löschen. \\
+
+GET &
+\path|/api/health| &
+Erreichbarkeit des Backends prüfen. \\
+
+GET &
+\path|/api/applications| &
+Alle Bewerbungen laden. \\
+
+POST &
+\path|/api/applications| &
+Neue Bewerbung erstellen. \\
+
+PUT &
+\path|/api/applications/{id}| &
+Bestehende Bewerbung bearbeiten. \\
+
+PATCH &
+\path|/api/applications/{id}/status| &
+Zulässigen Statuswechsel durchführen. \\
+
+POST &
+\path|/api/applications/{id}/undo-last-status-change| &
+Letzte Statusänderung zurücksetzen. \\
+
+DELETE &
+\path|/api/applications/{id}| &
+Bewerbung löschen. \\
+
 \bottomrule
 \end{tabularx}
-\caption{REST-Schnittstellen des Backends}
+\caption{REST-Schnittstelle des Backends}
 \label{tab:rest-endpoints}
 \end{table}
 
-\subsection{Datenhaltung}
 
-Die Tabelle \texttt{applications} speichert die Stammdaten und den aktuellen Status einer Bewerbung. Die Tabelle \texttt{application\_history} speichert die zugehörigen Historieneinträge. Zwischen einer Bewerbung und ihren Historieneinträgen besteht eine 1:n-Beziehung. Das Backend lädt die Historie anhand der Bewerbungs-ID und sortiert sie absteigend nach der Sequenznummer.
 
 
 
 % =============================  6 Laufzeitsicht  ===============================
-
+\newpage
 \section{Laufzeitsicht}
-
 \subsection{Laden der Bewerbungen}
 
 Beim Start prüft das Frontend zunächst den Endpunkt \texttt{/api/health}. Anschließend ruft es alle Bewerbungen über \texttt{GET /api/applications} ab. Der Controller delegiert an den Service, dieser an das Repository. Das Repository lädt zunächst die Bewerbungen und danach die jeweilige Historie. Die Domänenobjekte werden in Response-Objekte transformiert und als JSON an das Frontend zurückgegeben. Bei einem Fehler leert das Frontend den lokalen Datenbestand und zeigt das Backend als nicht erreichbar an.

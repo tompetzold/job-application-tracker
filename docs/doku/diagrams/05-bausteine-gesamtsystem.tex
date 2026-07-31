@@ -1,0 +1,84 @@
+\begin{tikzpicture}[node distance=1.4cm and 1.8cm]
+
+  \node[
+    frontend,
+    text width=3.8cm,
+    font=\small
+  ] (frontend) {
+    \textbf{React-Frontend}\\[0.15cm]
+    UI-Komponenten\\
+    API-Client\\
+    Vorschlagsdienst
+  };
+
+  \node[
+    backend,
+    right=of frontend,
+    text width=3.6cm,
+    font=\small
+  ] (backend) {
+    \textbf{Spring-Boot-Backend}\\[0.15cm]
+    Präsentation\\
+    Geschäftslogik\\
+    Persistenz
+  };
+
+  \node[
+    database,
+    right=1.6cm of backend,
+    font=\small
+  ] (database) {
+    \textbf{PostgreSQL}\\
+    Bewerbungen\\
+    Statushistorie
+  };
+
+  \node[
+    filebox,
+    below=1.4cm of frontend,
+    font=\small
+  ] (csv) {
+    \textbf{CSV-Dateien}\\
+    Vorschlagsdaten
+  };
+
+  \draw[connection]
+  (frontend) --
+  node[
+    midway,
+    above,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    REST/JSON
+  }
+  (backend);
+
+  \draw[connection]
+  (backend) --
+  node[
+    midway,
+    above,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    JDBC
+  }
+  (database);
+
+  \draw[connection]
+  (csv) --
+  node[
+    midway,
+    right,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    Dateizugriff
+  }
+  (frontend);
+
+\end{tikzpicture}

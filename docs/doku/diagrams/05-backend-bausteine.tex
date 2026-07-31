@@ -1,0 +1,151 @@
+\begin{tikzpicture}[
+  node distance=2cm and 0.9cm,
+  component/.style={
+    draw,
+    rounded corners=2pt,
+    thick,
+    align=center,
+    minimum height=1.05cm,
+    text width=4.2cm
+  }
+]
+
+  \node[
+    component,
+    fill=LayerBlue,
+    draw=DarkBlue
+  ] (controller) {
+    \texttt{ApplicationController}
+  };
+
+  \node[
+    component,
+    fill=LayerBlue,
+    draw=DarkBlue,
+    right=of controller
+  ] (presentationData) {
+    \texttt{ApplicationMapper}\\
+    Request- und Response-DTOs
+  };
+
+  \node[
+    component,
+    fill=LayerGreen,
+    draw=DarkGreen,
+    below=of controller
+  ] (service) {
+    \texttt{ApplicationService}
+  };
+
+  \node[
+    component,
+    fill=LayerGreen,
+    draw=DarkGreen,
+    right=of service
+  ] (domain) {
+    \texttt{Application}\\
+    \texttt{ApplicationStatus}\\
+    \texttt{StatusHistoryEntry}
+  };
+
+  \node[
+    component,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    below=of service
+  ] (repository) {
+    \texttt{ApplicationRepository}
+  };
+
+  \node[
+    component,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    right=of repository
+  ] (jdbc) {
+    \texttt{JdbcTemplate}
+  };
+
+  \draw[connection]
+  (controller) --
+  node[
+    left,
+    font=\small
+  ] {
+    Aufruf
+  }
+  (service);
+
+  \draw[connection]
+  (controller) --
+  (presentationData);
+
+  \draw[connection]
+  (presentationData) --
+  node[
+    right,
+    font=\small
+  ] {
+    Abbildung
+  }
+  (domain);
+
+  \draw[connection]
+  (service) --
+  (domain);
+
+  \draw[connection]
+  (service) --
+  node[
+    left,
+    font=\small
+  ] {
+    Datenzugriff
+  }
+  (repository);
+
+  \draw[connection]
+  (repository) --
+  (jdbc);
+
+  \begin{scope}[on background layer]
+
+    \node[
+      draw=DarkBlue,
+      dashed,
+      rounded corners=3pt,
+      fit=(controller)(presentationData),
+      inner sep=0.3cm,
+      label={
+        [font=\bfseries\small,text=DarkBlue]above:
+        Präsentationsschicht
+      }
+    ] {};
+
+    \node[
+      draw=DarkGreen,
+      dashed,
+      rounded corners=3pt,
+      fit=(service)(domain),
+      inner sep=0.3cm,
+      label={
+        [font=\bfseries\small,text=DarkGreen]above:
+        Geschäftslogikschicht
+      }
+    ] {};
+
+    \node[
+      draw=DarkOrange,
+      dashed,
+      rounded corners=3pt,
+      fit=(repository)(jdbc),
+      inner sep=0.3cm,
+      label={
+        [font=\bfseries\small,text=DarkOrange]above:
+        Persistenzschicht
+      }
+    ] {};
+
+  \end{scope}
+
+\end{tikzpicture}
