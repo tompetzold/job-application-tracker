@@ -1,1068 +1,920 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,11pt]{article}
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[ngerman]{babel}
+\usepackage[main=ngerman,provide=*]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{setspace}
-\usepackage{geometry}
-\usepackage{titling}
-\usepackage{lmodern}
-\usepackage{amsmath}
-\usepackage[style=ieee,sorting=none]{biblatex}
-\addbibresource{Literaturverzeichnis.bib}
-\usepackage{fancyhdr} % Paket für benutzerdefinierte Header
-\usepackage{titlesec} % Paket zum Anpassen der Kapitelüberschrift
 \usepackage{parskip}
-\usepackage{float}
-\usepackage{hyperref}
-\usepackage{makecell}
-\usepackage{listings}
-\usepackage{xcolor}
-\usepackage{multirow}
-\usepackage{tabularx} 
-\usepackage{wasysym}
-\usepackage{longtable}
 \usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage{array}
-\usepackage{calc}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tikz}
+\usepackage{hyperref}
 
-\geometry{left=3cm,right=3cm,top=3cm,bottom=3cm}
+\usetikzlibrary{
+  arrows.meta,
+  positioning,
+  shapes.geometric,
+  fit,
+  backgrounds,
+  calc
+}
 
-% Anpassen der Kapitelüberschrift (größer und dicker)
+\graphicspath{{images/}}
+
+\geometry{
+  left=2.7cm,
+  right=2.7cm,
+  top=2.6cm,
+  bottom=2.6cm
+}
+
+\setstretch{1.15}
+\setlength{\emergencystretch}{3em}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+
+\renewcommand{\arraystretch}{1.25}
+
+\setlist[itemize]{
+  topsep=0.35em,
+  itemsep=0.2em,
+  leftmargin=1.5em
+}
+
+\definecolor{LayerBlue}{HTML}{DCEBFA}
+\definecolor{LayerGreen}{HTML}{DDF3E4}
+\definecolor{LayerOrange}{HTML}{FCE8D5}
+\definecolor{LayerPurple}{HTML}{E9E1F8}
+\definecolor{LayerGray}{HTML}{F2F3F5}
+\definecolor{DarkBlue}{HTML}{1F4E79}
+\definecolor{DarkGreen}{HTML}{256D3F}
+\definecolor{DarkOrange}{HTML}{9A4C00}
+\definecolor{DarkPurple}{HTML}{5B3C88}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
 \titleformat{\section}[block]
-  {\normalfont\bfseries\fontsize{30pt}{36pt}\selectfont} % Schriftart und Größe (fett und sehr groß)
-  {\thesection}{1em}{} % Nummerierung und Abstand
-\titlespacing*{\section}{0pt}{-1cm}{1cm} % Abstand: 3cm vor der Überschrift und 1cm danach
+  {\normalfont\bfseries\fontsize{22pt}{26pt}\selectfont}
+  {\thesection}
+  {0.8em}
+  {}
 
-% Anpassen der Unterkapitelüberschrift (subsection)
+\titlespacing*{\section}
+  {0pt}
+  {1.6em}
+  {0.8em}
+
 \titleformat{\subsection}[block]
-  {\normalfont\bfseries\Large} % Schriftart und Größe (fett und größer)
-  {\thesubsection}{1em}{} % Nummerierung und Abstand
-\titlespacing*{\subsection}{0pt}{0.5cm}{0.5cm} % Abstand: 0.5cm vor der Überschrift und 0.5cm danach
+  {\normalfont\bfseries\Large}
+  {\thesubsection}
+  {0.8em}
+  {}
+
+\titlespacing*{\subsection}
+  {0pt}
+  {1.2em}
+  {0.5em}
 
 \titleformat{\subsubsection}[block]
-  {\normalfont\bfseries\large} % Schriftart und Größe (fett und größer)
-  {\thesubsubsection}{1em}{} % Nummerierung und Abstand
-\titlespacing*{\subsubsection}{0pt}{0.5cm}{0.5cm} % Abstand: 0.5cm vor der Überschrift und 0.5cm danach
+  {\normalfont\bfseries\large}
+  {\thesubsubsection}
+  {0.8em}
+  {}
 
-% Fancyhdr für benutzerdefinierte Header
+\titlespacing*{\subsubsection}
+  {0pt}
+  {1em}
+  {0.4em}
+
 \pagestyle{fancy}
-\fancyhf{} % Alle Felder zurücksetzen
+\fancyhf{}
 
-% Kapitel und Abschnitt im Header
-\fancyhead[L]{\nouppercase{\rightmark}} % Kapitelnummer + Kapitelname links
-% Header für Kapitel und Abschnitte definieren
-\renewcommand{\sectionmark}[1]{\markright{\thesection\quad #1}} % Abschnitt mit Nummer
-\renewcommand{\subsectionmark}[1]{\markright{\thesubsection\quad #1}} % Unterabschnitt mit Nummer
+\fancyfoot[C]{\thepage}
+
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\hypersetup{
+  pdftitle={Architekturdokumentation Bewerbungstracker},
+  pdfauthor={Philipp Söllner, Tom Petzold, Sascha Vusatjuk},
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=DarkBlue
+}
+
+\tikzset{
+  box/.style={
+    draw,
+    rounded corners=2pt,
+    thick,
+    align=center,
+    minimum height=1.15cm,
+    text width=3.2cm
+  },
+  system/.style={
+    box,
+    fill=LayerBlue,
+    draw=DarkBlue
+  },
+  actor/.style={
+    box,
+    fill=LayerGray,
+    draw=black,
+    text width=2.6cm
+  },
+  frontend/.style={
+    box,
+    fill=LayerPurple,
+    draw=DarkPurple
+  },
+  backend/.style={
+    box,
+    fill=LayerBlue,
+    draw=DarkBlue
+  },
+  database/.style={
+    cylinder,
+    shape border rotate=90,
+    aspect=0.25,
+    draw=DarkGreen,
+    thick,
+    fill=LayerGreen,
+    align=center,
+    minimum height=1.35cm,
+    minimum width=2.9cm
+  },
+  filebox/.style={
+    box,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    text width=2.8cm
+  },
+  layer/.style={
+    draw,
+    rounded corners=2pt,
+    thick,
+    minimum width=9.5cm,
+    minimum height=1.25cm,
+    align=center
+  },
+  participant/.style={
+    draw,
+    rounded corners=2pt,
+    thick,
+    fill=LayerGray,
+    minimum width=2.55cm,
+    minimum height=0.8cm,
+    align=center
+  },
+  message/.style={
+    -{Latex[length=2.2mm]},
+    thick
+  },
+  return/.style={
+    -{Latex[length=2.2mm]},
+    dashed
+  },
+  connection/.style={
+    -{Latex[length=2.4mm]},
+    thick
+  },
+  state/.style={
+    draw,
+    rounded corners=9pt,
+    thick,
+    fill=LayerGray,
+    minimum width=2.15cm,
+    minimum height=0.8cm,
+    align=center
+  }
+}
+
 \begin{document}
-\onehalfspacing
-\fancyfoot[C]{\thepage}
-% Logo
-\begin{center}
+
+
+
+
+
+% ================================  Deckblatt  =================================
+
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
 \thispagestyle{empty}
-    \includegraphics[width=0.4\textwidth]{images/rwu-logo.png}\hfill
-    \includegraphics[width=0.4\textwidth]{images/arc42-logo.png} \\[1cm]
-    \Large \textsc{Hochschule Ravensburg-Weingarten} \\[1cm]
-    \rule{\textwidth}{0.4pt} \\[0.4cm]
-    {\huge \textbf{Software-Architektur Arc42 Dokumentation}} \\[0.1cm]
-    \rule{\textwidth}{0.4pt} \\[1cm]
 
-    \noindent
-    \begin{minipage}[t]{0.35\textwidth}
-        \begin{flushleft} \large
-        \textit{Verfasser:} \\
-        Philipp Söllner 35601
-        Tom Petzold 34917
-        Sascha Vusatjuk 35650
-        \end{flushleft}
-    \end{minipage}
-    \hfill
-    \begin{minipage}[t]{0.5\textwidth}
-        \begin{flushleft} \large
-        \textit{Betreuer:} \\
-        Prof. Dr. Sebastian Mauser \\
-        \makebox[1.1\linewidth][l]{Hochschule Ravensburg-Weingarten} \\
-        \end{flushleft}
-    \end{minipage}
-    \vfill
-    Datum
+\begin{center}
+
+\begin{minipage}{\textwidth}
+  \includegraphics[height=3cm]{images/rwu-logo.png}
+  \hfill
+  \includegraphics[height=2cm]{images/arc42-logo.png}
+\end{minipage}
+
+\vspace{1.5cm}
+
+{\Large\textsc{Hochschule Ravensburg-Weingarten}\par}
+\vspace{0.4cm}
+
+{\large Lehrveranstaltung Software-Architektur\par}
+{\large Sommersemester 2026\par}
+
+\vspace{0.5cm}
+
+\rule{\textwidth}{0.5pt}
+
+\vspace{0.5cm}
+
+{\Huge\bfseries Architekturdokumentation\par}
+
+\vspace{0.5cm}
+
+{\LARGE\bfseries Bewerbungstracker\par}
+
+\vspace{0.5cm}
+
+{\Large Umsetzung einer Schichtenarchitektur\par}
+
+\vspace{0.3cm}
+
+{\large Dokumentationsstruktur nach arc42\par}
+
+\vspace{0.6cm}
+
+\rule{\textwidth}{0.5pt}
+
 \end{center}
-\pagebreak
+
+\vfill
+
+\noindent
+\begin{minipage}[t]{0.52\textwidth}
+  \raggedright
+  \large
+
+  \textbf{Verfasser}\par
+  \vspace{0.3cm}
+
+  Philipp Söllner, 35601\par
+  \vspace{0.2cm}
+
+  Tom Petzold, 34917\par
+  \vspace{0.2cm}
+
+  Sascha Vusatjuk, 35650\par
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.42\textwidth}
+  \raggedright
+  \large
+
+  \textbf{Betreuer}\par
+  \vspace{0.3cm}
+
+  Prof. Dr. Sebastian Mauser\par
+  Hochschule Ravensburg-Weingarten\par
+\end{minipage}
+
+\vfill
+
+\begin{center}
+  {\large Weingarten, 2. August 2026}
+\end{center}
+
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
 \pagenumbering{roman}
-\fancyfoot[C]{\thepage}
 
 
-\thispagestyle{plain} % Inhaltsverzeichnis ohne Header
+
+
+
+% ===========================  0 Inhaltsverzeichnis  ===========================
+
+\thispagestyle{plain}
 \tableofcontents
-\pagebreak
+\clearpage
 
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
+
+
+
+
+% ===========================  1 Einführung und Ziele  ===========================
+
 \section{Einführung und Ziele}
 
 \subsection{Aufgabenstellung}
-{\large \textbf{Inhalt}}\\
-Der Bewerbungstracker ist eine webbasierte Anwendung zur
-Verwaltung und Nachverfolgung von Bewerbungen. Nutzer können Bewerbungen anlegen, deren Status verwalten und den Überblick über ihren Bewerbungsprozess behalten.
 
-Die \textbf{Kernfunktionalitäten} des Bewerbungstrackers sind:
+Der Bewerbungstracker ist eine webbasierte Anwendung zur Verwaltung und Nachverfolgung persönlicher Bewerbungsprozesse.
+Nutzer können Bewerbungen erfassen, bearbeiten und nach ihrem aktuellen Status organisieren.
+Der Bewerbungsprozess wird vom Entwurf bis zu einem abschließenden Zustand abgebildet.
+
+Die wesentlichen Funktionen sind:
 
 \begin{itemize}
-\item Bewerbungen anlegen mit (Firma, Position, Standort usw.)
-\item Status der Bewerbungen ändern
-\item Bewerbungen auf einem Kanban-Board visualisieren und per Drag \& Drop verschieben
-\item Statistiken basierend auf allen Bewerbungen und Verlaufseinträgen einsehen
+  \item Anlegen, Bearbeiten und Löschen von Bewerbungen
+  \item Darstellung der Bewerbungen auf einem Kanban-Board
+  \item Ändern des Status per Drag-and-drop oder Auswahlmenü
+  \item Prüfung zulässiger Statusübergänge
+  \item Anzeige einer Änderungshistorie
+  \item Zurücksetzen der letzten Statusänderung
+  \item Suche über die Bewerbungsdaten
+  \item Anzeige statistischer Kennzahlen
 \end{itemize}
 
-{\large \textbf{Motivation}}\\
-Das Projekt ist im Rahmen der Lehrveranstaltung Software-Architektur entstanden. Es dient als Demonstration einer sauberen Schichtenarchitektur und soll den Studierenden einen Einblick geben, wie diese richtig implementiert wird und worauf dabei zu achten ist.
+Das Projekt dient der praktischen Umsetzung einer Layered Architecture.
+Der architektonische Schwerpunkt liegt auf der Trennung von Präsentation, Geschäftslogik und Persistenz.
 
 \subsection{Qualitätsziele}
 
-offen
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{1.8cm} L{3.2cm} Y}
+\toprule
+\textbf{Prio.} & \textbf{Qualitätsziel} & \textbf{Konkretisierung} \\
+\midrule
+1 & Wartbarkeit & HTTP-Verarbeitung, Geschäftslogik und Datenbankzugriffe sind klar getrennten Schichten zugeordnet. \\
+2 & Nachvollziehbarkeit & Statusänderungen werden mit vorherigem Status, neuem Status und Zeitstempel gespeichert. \\
+3 & Datenkonsistenz & Ungültige Eingaben und unzulässige Statusübergänge werden vom Backend abgelehnt. \\
+4 & Bedienbarkeit & Bewerbungen können über ein visuelles Board verwaltet und gesucht werden. \\
+5 & Installierbarkeit & Frontend, Backend und Datenbank können gemeinsam über Docker Compose gestartet werden. \\
+\bottomrule
+\end{tabularx}
+\caption{Priorisierte Qualitätsziele}
+\label{tab:quality-goals}
+\end{table}
 
-\subsection{Stakeholder}\label{_stakeholder}
+\subsection{Stakeholder}
 
-{\large \textbf{Inhalt}}
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.22}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.30}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.48}}@{}}
-\toprule\noalign{}
-\textbf{Rolle} & \textbf{Person / Gruppe} & \textbf{Erwartungshaltung} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-Entwickler & Tom Petzold, Sascha Vusatjuk, Philipp Söllner & Klare, saubere Schichtentrennung und lauffähiges Front-/Backend \\\\
-Prüfer & Sebastian Mauser & Nachvollziehbare und saubere Schichtenarchitektur, sowie eine vollständige arc42-Dokumentation \\\\ 
-Endnutzer & Jobsuchende & Übersichtliche Benutzeroberfläche zum anlegen von Bewerbungen und einfache Bedienung\\
-\end{longtable}
-\newpage
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.2cm} L{4.2cm} Y}
+\toprule
+\textbf{Rolle} & \textbf{Person oder Gruppe} & \textbf{Erwartung} \\
+\midrule
+Endnutzer & Jobsuchende & Einfache und übersichtliche Verwaltung von Bewerbungen. \\
+Entwicklungsteam & Philipp Söllner, Tom Petzold, Sascha Vusatjuk & Klare Verantwortlichkeiten und eine nachvollziehbare Systemstruktur. \\
+Dozent und Prüfer & Prof. Dr. Sebastian Mauser & Begründete und im Code erkennbare Umsetzung der Layered Architecture. \\
+\bottomrule
+\end{tabularx}
+\caption{Stakeholder des Systems}
+\label{tab:stakeholders}
+\end{table}
+
+
+
+
+
+% ============================  2 Randbedingungen  =============================
+
 \section{Randbedingungen}
 
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.44}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.56}}@{}}
-\toprule\noalign{}
-\textbf{Randbedingungen} & \textbf{Erläuterung} \\
-\midrule\noalign{}
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.5cm} Y}
+\toprule
+\textbf{Kategorie} & \textbf{Randbedingung} \\
+\midrule
+Projektkontext & Umsetzung als Gruppenprojekt in der Lehrveranstaltung Software-Architektur. \\
+Dokumentation & Dokumentation der wesentlichen Architekturmerkmale in einer an arc42 orientierten Struktur. \\
+Team und Zeitraum & Entwicklung durch drei Studierende innerhalb eines Semesters. \\
+Frontend & React-Single-Page-Application mit Vite und Bun. \\
+Backend & Java 21, Spring Boot und Maven. \\
+Persistenz & PostgreSQL 16 und direkter Datenbankzugriff über Spring JDBC. \\
+Kommunikation & Synchrone REST-Kommunikation mit JSON-Nachrichten. \\
+Betrieb & Lokale containerisierte Ausführung mit Docker Compose. \\
+Projektcharakter & Funktionsfähiger Lehrveranstaltungsprototyp, nicht als produktives Mehrbenutzersystem ausgelegt. \\
+\bottomrule
+\end{tabularx}
+\caption{Organisatorische und technische Randbedingungen}
+\label{tab:constraints}
+\end{table}
+
+Die Layered Architecture war keine extern vorgegebene technische Randbedingung, sondern eine bewusste Architekturentscheidung des Teams. Ihre Auswahl und Umsetzung werden in Kapitel~\ref{sec:solution-strategy} beschrieben.
+
+
+
+% ==========================  3 Kontextabgrenzung  =============================
+
+\section{Kontextabgrenzung}
+
+\subsection{Fachlicher Kontext}
+
+Der Bewerbungstracker unterstützt einen Jobsuchenden bei der Verwaltung seiner Bewerbungen. Der Nutzer erfasst Bewerbungsdaten, verändert den aktuellen Status, bearbeitet oder löscht Einträge und ruft Statistiken ab. Das System liefert eine nach Status gruppierte Übersicht, Detailangaben, eine Statushistorie und statistische Kennzahlen. Externe Jobportale, Unternehmenssysteme oder Authentifizierungsdienste sind nicht angebunden.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=4.4cm]
+  \node[actor] (user) {Jobsuchender};
+  \node[system,right=of user,text width=4.1cm] (system) {Bewerbungstracker\\Systemgrenze};
+  \draw[connection,bend left=12] (user) to node[above,align=center]{Bewerbungsdaten, Statusänderungen,\\Such- und Bearbeitungsbefehle} (system);
+  \draw[connection,bend left=12] (system) to node[below,align=center]{Übersicht, Historie,\\Statistiken, Fehlermeldungen} (user);
+\end{tikzpicture}
+\caption{Fachlicher Kontext des Bewerbungstrackers}
+\label{fig:functional-context}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.1cm} Y Y}
+\toprule
+\textbf{Partner} & \textbf{Eingaben} & \textbf{Ausgaben} \\
+\midrule
+Jobsuchender & Firma, Position, Standort, Gehaltsangaben, Fristen, Notizen, Statusänderungen und Suchbegriffe & Bewerbungsboard, Detailansicht, Statushistorie, Statistikwerte und Fehlermeldungen \\
+\bottomrule
+\end{tabularx}
+\caption{Fachliche Ein- und Ausgaben}
+\label{tab:functional-io}
+\end{table}
+
+\subsection{Technischer Kontext}
+
+Die Benutzeroberfläche wird als React-Anwendung im Browser ausgeführt. Sie kommuniziert über HTTP und JSON mit der REST-Schnittstelle des Spring-Boot-Backends. Das Backend verarbeitet die Anfragen und greift über JDBC auf PostgreSQL zu. Vorschläge für Unternehmen, Positionen und Standorte werden aus statischen CSV-Dateien durch das Frontend geladen.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.15cm and 1.05cm]
+  \node[actor] (browser) {Webbrowser};
+  \node[frontend,right=of browser] (frontend) {React-Frontend\\Port 5173};
+  \node[backend,right=of frontend] (backend) {Spring-Boot-Backend\\Port 8080};
+  \node[database,right=of backend] (database) {PostgreSQL\\Port 5432};
+  \node[filebox,above=1.25cm of frontend] (csv) {Statische CSV-Dateien\\Vorschlagsdaten};
+
+  \draw[connection] (browser) -- node[above]{HTTP} (frontend);
+  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
+  \draw[connection] (backend) -- node[above]{JDBC} (database);
+  \draw[connection] (csv) -- node[right]{Dateizugriff} (frontend);
+\end{tikzpicture}%
+}
+\caption{Technischer Kontext}
+\label{fig:technical-context}
+\end{figure}
+
+
+
+% ============================  4 Lösungsstrategie  =============================
+
+\section{Lösungsstrategie}
+\label{sec:solution-strategy}
+
+\subsection{Layered Architecture}
+
+Die Layered Architecture strukturiert ein Softwaresystem in horizontale Schichten mit klar abgegrenzten Verantwortlichkeiten. Eine Schicht stellt der darüberliegenden Schicht Dienste zur Verfügung und delegiert Aufgaben an die darunterliegende Schicht. Bei einer geschlossenen Schichtenarchitektur werden Schichten nicht übersprungen. Dadurch bleiben Abhängigkeiten gerichtet und die Zuständigkeiten nachvollziehbar \cite{richards2020}.
+
+Für das Backend wurden drei Anwendungsschichten festgelegt:
+
+\begin{itemize}
+  \item \textbf{Präsentationsschicht:} Entgegennahme von HTTP-Anfragen, Abbildung von Request- und Response-Daten sowie Zuordnung fachlicher Fehler zu HTTP-Statuscodes.
+  \item \textbf{Geschäftslogikschicht:} Validierung von Eingaben, Durchsetzung der Statusregeln, Erzeugung von Historieneinträgen und Koordination fachlicher Abläufe.
+  \item \textbf{Persistenzschicht:} Ausführung der SQL-Anweisungen und Abbildung zwischen relationalen Daten und den fachlichen Objekten.
+\end{itemize}
+
+\subsection{Umsetzung im Bewerbungstracker}
+
+Das Backend ist als modular gegliederter Monolith umgesetzt. Alle Backend-Schichten werden gemeinsam als eine Spring-Boot-Anwendung gebaut und bereitgestellt. Die Abhängigkeiten verlaufen von der Präsentationsschicht über die Geschäftslogik zur Persistenzschicht. Der Controller greift nicht direkt auf das Repository oder die Datenbank zu.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=0.55cm]
+  \node[layer,fill=LayerPurple,draw=DarkPurple] (client) {React-Frontend\\Darstellung und Benutzerinteraktion};
+  \node[layer,fill=LayerBlue,draw=DarkBlue,below=of client] (presentation) {Präsentationsschicht\\ApplicationController, DTOs, ApplicationMapper};
+  \node[layer,fill=LayerGreen,draw=DarkGreen,below=of presentation] (business) {Geschäftslogikschicht\\ApplicationService, ApplicationStatus, Domänenobjekte};
+  \node[layer,fill=LayerOrange,draw=DarkOrange,below=of business] (persistence) {Persistenzschicht\\ApplicationRepository, JdbcTemplate};
+  \node[database,below=0.7cm of persistence] (database) {PostgreSQL};
+
+  \draw[connection] (client) -- node[right]{REST/JSON} (presentation);
+  \draw[connection] (presentation) -- (business);
+  \draw[connection] (business) -- (persistence);
+  \draw[connection] (persistence) -- node[right]{JDBC} (database);
+
+  \begin{scope}[on background layer]
+    \node[draw=DarkBlue,dashed,rounded corners=3pt,fit=(presentation)(business)(persistence),inner sep=0.3cm,label={[DarkBlue]right:Spring-Boot-Backend}] {};
+  \end{scope}
+\end{tikzpicture}
+\caption{Schichten und Abhängigkeitsrichtung}
+\label{fig:layers}
+\end{figure}
+
+Die Geschäftslogikschicht kennt mit dem konkreten \texttt{ApplicationRepository} die darunterliegende Implementierung. Das entspricht einer klassischen Layered Architecture, nicht einer hexagonalen Architektur mit Ports und Adaptern. Das React-Frontend ist ein separater Client und gehört nicht zu den internen Backend-Schichten.
+
+\subsection{Eignung und Konsequenzen}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{Y Y}
+\toprule
+\textbf{Vorteile für das Projekt} & \textbf{Nachteile und Konsequenzen} \\
+\midrule
+Klare Zuordnung der Verantwortlichkeiten & Änderungen an durchgehenden Funktionen können mehrere Schichten betreffen. \\
+Geringe konzeptionelle und betriebliche Komplexität & Das Backend wird als Einheit gebaut und bereitgestellt. \\
+Direkte Eignung für eine überschaubare datenorientierte Anwendung & Einzelne Fachbereiche können nicht unabhängig skaliert werden. \\
+Geschäftsregeln liegen zentral im Service & Es besteht die Gefahr, dass einfache Methoden lediglich durch Schichten weitergereicht werden. \\
+Einfacher lokaler Betrieb & Fehler innerhalb des Backend-Prozesses können die gesamte Backend-Funktionalität betreffen. \\
+\bottomrule
+\end{tabularx}
+\caption{Auswirkungen der gewählten Architektur}
+\label{tab:layered-tradeoffs}
+\end{table}
+
+Für den begrenzten Funktionsumfang ist der modulare Monolith angemessener als eine Microservices-Architektur. Eine Aufteilung in unabhängig bereitgestellte Services würde zusätzliche Netzwerkkommunikation, verteilte Fehlerbehandlung und einen höheren Betriebsaufwand verursachen, ohne für den Prototyp einen entsprechenden Nutzen zu liefern.
+
+\subsection{Technologie- und Betriebsstrategie}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}
+\toprule
+\textbf{Bereich} & \textbf{Technologie} & \textbf{Aufgabe} \\
+\midrule
+Frontend & React, Vite, Bun & Komponentenbasierte Benutzeroberfläche und Aufruf der REST-Schnittstelle. \\
+Backend & Java 21, Spring Boot, Maven & Ausführung der Layered Architecture und Bereitstellung der API. \\
+Datenzugriff & Spring JDBC & Explizite SQL-Abfragen über \texttt{JdbcTemplate}. \\
+Datenbank & PostgreSQL 16 & Persistenz von Bewerbungen und Historieneinträgen. \\
+Betrieb & Docker Compose & Gemeinsamer Start von Frontend, Backend und Datenbank. \\
+\bottomrule
+\end{tabularx}
+\caption{Technologieübersicht}
+\label{tab:technology-overview}
+\end{table}
+
+
+
+% =============================  5 Bausteinsicht  ===============================
+
+\section{Bausteinsicht}
+
+\subsection{Gesamtsystem}
+
+Das Gesamtsystem besteht aus einer React-Single-Page-Application, einem Spring-Boot-Backend und einer PostgreSQL-Datenbank. Statische Vorschlagsdaten werden durch das Frontend geladen und lokal ausgewertet.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=1.3cm and 1.15cm]
+  \node[frontend,text width=3.7cm] (frontend) {React-Frontend\\App, Komponenten, API-Client, Vorschlagsdienst};
+  \node[backend,right=of frontend,text width=3.7cm] (backend) {Spring-Boot-Backend\\Presentation, Business, Persistence};
+  \node[database,right=of backend] (database) {PostgreSQL\\applications\\application\_history};
+  \node[filebox,below=1.2cm of frontend] (csv) {CSV-Vorschlagsdaten};
+
+  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
+  \draw[connection] (backend) -- node[above]{JDBC} (database);
+  \draw[connection] (csv) -- (frontend);
+\end{tikzpicture}
+\caption{Bausteine des Gesamtsystems}
+\label{fig:system-building-blocks}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.3cm} Y Y}
+\toprule
+\textbf{Baustein} & \textbf{Verantwortung} & \textbf{Schnittstellen} \\
+\midrule
+React-Frontend & Darstellung, Benutzerinteraktion, lokaler UI-Zustand, Suche und Statistikberechnung & HTTP-Aufrufe an die REST-API; Zugriff auf statische CSV-Dateien \\
+Spring-Boot-Backend & Fachliche Verarbeitung, Validierung und Koordination der Persistenz & REST/JSON nach außen; JDBC zur Datenbank \\
+PostgreSQL & Dauerhafte Speicherung der Bewerbungen und Statushistorie & PostgreSQL-Protokoll über JDBC \\
+CSV-Vorschlagsdaten & Vorschläge für Unternehmen, Positionen und Standorte & Statischer Dateizugriff durch das Frontend \\
+\bottomrule
+\end{tabularx}
+\caption{Blackbox-Beschreibung der Hauptbausteine}
+\label{tab:main-components}
+\end{table}
+
+\subsection{Backend-Schichten}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3cm} L{5cm} Y}
+\toprule
+\textbf{Schicht} & \textbf{Elemente} & \textbf{Verantwortung} \\
+\midrule
+Präsentation & \texttt{ApplicationController}, \texttt{ApplicationRequest}, \texttt{ApplicationResponse}, \texttt{StatusChangeRequest}, \texttt{ApplicationMapper} & REST-Endpunkte, Datentransformation und Zuordnung fachlicher Fehler zu HTTP-Statuscodes. \\
+Geschäftslogik & \texttt{ApplicationService}, \texttt{ApplicationStatus}, \texttt{Application}, \texttt{StatusHistoryEntry} & Pflichtfeld- und Gehaltsvalidierung, Statusautomat, Historie und fachliche Standardwerte. \\
+Persistenz & \texttt{ApplicationRepository} & SQL-basierte CRUD-Operationen und Laden beziehungsweise Speichern der Historieneinträge. \\
+\bottomrule
+\end{tabularx}
+\caption{Whitebox-Beschreibung des Backends}
+\label{tab:backend-layers}
+\end{table}
+
+\subsection{Zentrale Schnittstellen}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{L{1.8cm} L{6.4cm} Y}
+\toprule
+\textbf{Methode} & \textbf{Pfad} & \textbf{Zweck} \\
+\midrule
+GET & \path|/api/health| & Erreichbarkeit des Backends prüfen. \\
+GET & \path|/api/applications| & Alle Bewerbungen einschließlich Historie laden. \\
+POST & \path|/api/applications| & Neue Bewerbung mit initialem Status \texttt{DRAFT} erstellen. \\
+PUT & \path|/api/applications/{id}| & Inhalt einer bestehenden Bewerbung bearbeiten. \\
+PATCH & \path|/api/applications/{id}/status| & Fachlich zulässigen Statuswechsel durchführen. \\
+POST & \path|/api/applications/{id}/undo-last-status-change| & Letzte Statusänderung zurücksetzen. \\
+DELETE & \path|/api/applications/{id}| & Bewerbung löschen. \\
+\bottomrule
+\end{tabularx}
+\caption{REST-Schnittstellen des Backends}
+\label{tab:rest-endpoints}
+\end{table}
+
+\subsection{Datenhaltung}
+
+Die Tabelle \texttt{applications} speichert die Stammdaten und den aktuellen Status einer Bewerbung. Die Tabelle \texttt{application\_history} speichert die zugehörigen Historieneinträge. Zwischen einer Bewerbung und ihren Historieneinträgen besteht eine 1:n-Beziehung. Das Backend lädt die Historie anhand der Bewerbungs-ID und sortiert sie absteigend nach der Sequenznummer.
+
+
+
+% =============================  6 Laufzeitsicht  ===============================
+
+\section{Laufzeitsicht}
+
+\subsection{Laden der Bewerbungen}
+
+Beim Start prüft das Frontend zunächst den Endpunkt \texttt{/api/health}. Anschließend ruft es alle Bewerbungen über \texttt{GET /api/applications} ab. Der Controller delegiert an den Service, dieser an das Repository. Das Repository lädt zunächst die Bewerbungen und danach die jeweilige Historie. Die Domänenobjekte werden in Response-Objekte transformiert und als JSON an das Frontend zurückgegeben. Bei einem Fehler leert das Frontend den lokalen Datenbestand und zeigt das Backend als nicht erreichbar an.
+
+\subsection{Erstellen einer Bewerbung}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[x=3.15cm,y=-0.78cm,font=\small]
+  \node[participant] at (0,0) (fe) {Frontend};
+  \node[participant] at (1,0) (co) {Controller};
+  \node[participant] at (2,0) (se) {Service};
+  \node[participant] at (3,0) (re) {Repository};
+  \node[participant] at (4,0) (db) {PostgreSQL};
+
+  \foreach \x in {0,1,2,3,4} {\draw[dashed,gray] (\x,0.45) -- (\x,8.2);}
+
+  \draw[message] (0,1) -- node[above]{POST /api/applications} (1,1);
+  \draw[message] (1,2) -- node[above]{create(Application)} (2,2);
+  \draw[message] (2,3) -- node[above]{save(Application)} (3,3);
+  \node[align=left,fill=white] at (2.25,2.55) {Validierung, Status DRAFT,\\Historieneintrag erzeugen};
+  \draw[message] (3,4) -- node[above]{INSERT applications} (4,4);
+  \draw[return] (4,5) -- node[above]{ID} (3,5);
+  \draw[message] (3,6) -- node[above]{INSERT application\_history} (4,6);
+  \draw[return] (3,7) -- node[above]{gespeicherte Bewerbung} (2,7);
+  \draw[return] (2,7.6) -- node[above]{Application} (1,7.6);
+  \draw[return] (1,8.1) -- node[above]{HTTP 201 + JSON} (0,8.1);
+\end{tikzpicture}%
+}
+\caption{Laufzeitablauf beim Erstellen einer Bewerbung}
+\label{fig:runtime-create}
+\end{figure}
+
+Der Service normalisiert Firma, Position, Standort und Notizen. Firma und Position sind Pflichtfelder. Negative Gehaltswerte und ein Mindestgehalt oberhalb des Maximalgehalts werden abgelehnt. Der initiale Status wird unabhängig von der Frontend-Eingabe auf \texttt{DRAFT} gesetzt.
+
+\subsection{Ändern und Zurücksetzen eines Status}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[x=3.15cm,y=-0.78cm,font=\small]
+  \node[participant] at (0,0) (fe) {Frontend};
+  \node[participant] at (1,0) (co) {Controller};
+  \node[participant] at (2,0) (se) {Service};
+  \node[participant] at (3,0) (re) {Repository};
+  \node[participant] at (4,0) (db) {PostgreSQL};
+
+  \foreach \x in {0,1,2,3,4} {\draw[dashed,gray] (\x,0.45) -- (\x,9.1);}
+
+  \draw[message] (0,1) -- node[above]{PATCH /api/applications/\{id\}/status} (1,1);
+  \draw[message] (1,2) -- node[above]{updateStatus(id, status)} (2,2);
+  \draw[message] (2,3) -- node[above]{findById(id)} (3,3);
+  \draw[message] (3,4) -- node[above]{SELECT Bewerbung + Historie} (4,4);
+  \draw[return] (4,5) -- node[above]{Bewerbung} (3,5);
+  \draw[return] (3,5.7) -- node[above]{Bewerbung} (2,5.7);
+  \node[align=left,fill=white] at (2.3,6.25) {Statusübergang prüfen und\\Historieneintrag erzeugen};
+  \draw[message] (2,7) -- node[above]{update + saveHistory} (3,7);
+  \draw[message] (3,7.8) -- node[above]{UPDATE + INSERT} (4,7.8);
+  \draw[return] (3,8.5) -- node[above]{aktualisierte Bewerbung} (2,8.5);
+  \draw[return] (2,9) -- node[above]{HTTP 200 + JSON} (0,9);
+\end{tikzpicture}%
+}
+\caption{Laufzeitablauf bei einer Statusänderung}
+\label{fig:runtime-status}
+\end{figure}
+
+Das Frontend verhindert bekannte unzulässige Übergänge bereits in der Benutzeroberfläche. Die verbindliche Prüfung erfolgt dennoch im Backend anhand der Übergangstabelle in \texttt{ApplicationStatus}. Beim Zurücksetzen wird der letzte nicht rückgängig gemachte Statuswechsel gesucht. Der aktuelle Status wird auf den vorherigen Status gesetzt und ein zusätzlicher Historieneintrag vom Typ \texttt{STATUS\_CHANGE\_UNDONE} erzeugt.
+
+
+
+% ===========================  7 Verteilungssicht  ==============================
+
+\section{Verteilungssicht}
+
+Die Anwendung wird lokal über Docker Compose auf drei Container verteilt. Alle Container befinden sich im von Docker Compose erzeugten Netzwerk. Das Frontend ist für den Browser über Port 5173 erreichbar, das Backend über Port 8080. PostgreSQL wird intern über den Servicenamen \texttt{postgres} angesprochen und zusätzlich für Entwicklungszugriffe an Port 5432 des Hosts gebunden.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.15cm and 1cm]
+  \node[actor] (browser) {Browser auf Host};
+  \node[frontend,right=of browser] (frontend) {Frontend-Container\\oven/bun:1-alpine\\Port 5173};
+  \node[backend,right=of frontend] (backend) {Backend-Container\\Java 21 JRE\\Port 8080};
+  \node[database,right=of backend] (postgres) {PostgreSQL 16\\Port 5432};
+  \node[filebox,below=1.3cm of postgres] (volume) {Docker-Volume\\postgres\_data};
+
+  \draw[connection] (browser) -- node[above]{HTTP} (frontend);
+  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
+  \draw[connection] (backend) -- node[above]{JDBC} (postgres);
+  \draw[connection] (postgres) -- node[right]{persistiert} (volume);
+
+  \begin{scope}[on background layer]
+    \node[draw=gray,dashed,rounded corners=4pt,fit=(frontend)(backend)(postgres)(volume),inner sep=0.45cm,label={[gray]below:Docker-Compose-Umgebung}] {};
+  \end{scope}
+\end{tikzpicture}%
+}
+\caption{Lokale Docker-Infrastruktur}
+\label{fig:deployment}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{3.3cm} L{3.2cm} Y}
+\toprule
+\textbf{Knoten} & \textbf{Artefakt} & \textbf{Besonderheiten} \\
+\midrule
+Frontend-Container & React-/Vite-Anwendung & Start über Bun im Entwicklungsmodus mit Bindung an \texttt{0.0.0.0}. \\
+Backend-Container & Spring-Boot-JAR & Multi-Stage-Build mit Maven und Java 21; Runtime mit schlankem JRE-Image. \\
+PostgreSQL-Container & Datenbank bewerbungstracker & Healthcheck über \texttt{pg\_isready}; persistentes Volume. \\
+\bottomrule
+\end{tabularx}
+\caption{Zuordnung der Softwareartefakte zur Infrastruktur}
+\label{tab:deployment-elements}
+\end{table}
+
+Der Backend-Start ist an den erfolgreichen Datenbank-Healthcheck gekoppelt. Das Frontend besitzt keine entsprechende Healthcheck-Abhängigkeit zum Backend. Zugangsdaten und Host-Ports sind für die lokale Entwicklungsumgebung festgelegt und nicht als produktive Sicherheitskonfiguration zu verstehen.
+
+
+
+% ======================  8 Querschnittliche Konzepte  ==========================
+
+\section{Querschnittliche Konzepte}
+
+\subsection{Statusmodell und Validierung}
+
+Die Statuspipeline ist die zentrale fachliche Regel der Anwendung. Sie ist im Backend als Übergangstabelle implementiert und wird im Frontend zur Steuerung der erlaubten Benutzeraktionen gespiegelt.
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[node distance=1.25cm and 1.05cm]
+  \node[state] (draft) {DRAFT};
+  \node[state,right=of draft] (applied) {APPLIED};
+  \node[state,right=of applied] (interview) {INTERVIEW};
+  \node[state,right=of interview] (offer) {OFFER};
+  \node[state,right=of offer,fill=LayerGreen] (accepted) {ACCEPTED};
+  \node[state,below=1.5cm of interview,fill=LayerOrange] (rejected) {REJECTED};
+  \node[state,below=1.5cm of offer,fill=LayerOrange] (cancelled) {CANCELLED};
+
+  \draw[connection] (draft) -- (applied);
+  \draw[connection] (applied) -- (interview);
+  \draw[connection] (interview) -- (offer);
+  \draw[connection] (offer) -- (accepted);
+  \draw[connection] (applied) -- (rejected);
+  \draw[connection] (interview) -- (rejected);
+  \draw[connection] (offer) -- (cancelled);
+  \draw[connection,bend right=27] (draft) to (cancelled);
+  \draw[connection,bend left=20] (applied) to (offer);
+  \draw[connection,bend left=20] (applied) to (cancelled);
+  \draw[connection,bend left=12] (interview) to (cancelled);
+\end{tikzpicture}%
+}
+\caption{Zulässige Statusübergänge}
+\label{fig:status-model}
+\end{figure}
+
+Firma und Position sind beim Erstellen verpflichtend. Gehaltswerte dürfen nicht negativ sein und bei einem Wertebereich darf das Minimum nicht über dem Maximum liegen. Inhaltliche Aktualisierungen und Statusänderungen werden über getrennte Endpunkte verarbeitet.
+
+\subsection{Fehlerbehandlung}
+
+\begin{table}[H]
+\centering
+\begin{tabularx}{\textwidth}{L{4cm} L{2.5cm} Y}
+\toprule
+\textbf{Situation} & \textbf{HTTP-Status} & \textbf{Verhalten} \\
+\midrule
+Ungültige Eingabe oder Statusübergang & 400 Bad Request & Das Backend liefert ein JSON-Objekt mit einer fachlichen Fehlermeldung. \\
+Unbekannte Bewerbungs-ID & 404 Not Found & Eine \texttt{ApplicationNotFoundException} wird in eine verständliche Fehlerantwort übersetzt. \\
+Erfolgreiches Löschen & 204 No Content & Das Frontend erwartet keinen Response-Body. \\
+Backend nicht erreichbar & Keine HTTP-Antwort & Das Frontend leert den lokalen Datenbestand und kennzeichnet das Backend als offline. \\
+\bottomrule
+\end{tabularx}
+\caption{Fehlerbehandlung an der REST-Schnittstelle}
+\label{tab:error-handling}
+\end{table}
+
+\subsection{Persistenz und Änderungshistorie}
+
+Der aktuelle Zustand einer Bewerbung und die historischen Änderungen werden getrennt gespeichert. Dadurch kann der aktuelle Status direkt gelesen werden, während frühere Übergänge für die Historie und statistische Auswertungen erhalten bleiben. Ein Historieneintrag enthält Typ, vorherigen Status, neuen Status, Beschreibung, Erstellungszeitpunkt und einen optionalen Rücksetzzeitpunkt.
+
+Die Persistenzschicht verwendet parametrisierte SQL-Anweisungen über \texttt{JdbcTemplate}. Dadurch werden Nutzereingaben nicht direkt in SQL-Zeichenketten eingesetzt. Bewerbung und Historieneintrag werden derzeit in getrennten Datenbankoperationen geschrieben; die daraus entstehende Konsistenzgefahr wird in Kapitel~\ref{sec:risks} bewertet.
+
+\subsection{Konfiguration und Kommunikation}
+
+Die Backend-Adresse des Frontends ist über \texttt{VITE\_API\_BASE\_URL} konfigurierbar und fällt lokal auf \texttt{http://localhost:8080} zurück. Die Datenbankverbindung wird im Backend durch Spring-Umgebungsvariablen gesetzt. Innerhalb des Docker-Netzwerks wird PostgreSQL über \texttt{postgres:5432} erreicht. CORS ist im Controller für die lokalen Frontend-Adressen \texttt{localhost:5173} und \texttt{localhost:5174} freigegeben.
+
+Die Kommunikation zwischen Frontend und Backend erfolgt synchron. Das Frontend wartet nach schreibenden Operationen auf die aktualisierte Repräsentation der Bewerbung und ersetzt damit seinen lokalen Zustand.
+
+
+
+% ======================  9 Architekturentscheidungen  ==========================
+
+\section{Architekturentscheidungen}
+
+Die wesentlichen Entscheidungen werden in kompakter ADR-Form dokumentiert. Kapitel~\ref{sec:solution-strategy} beschreibt die daraus resultierende Gesamtstrategie; die folgende Tabelle hält Alternativen und Konsequenzen fest.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabularx}{\textwidth}{L{2.4cm} L{3.1cm} L{3cm} Y}
+\toprule
+\textbf{Entscheidung} & \textbf{Gewählte Lösung} & \textbf{Alternative} & \textbf{Begründung und Konsequenz} \\
+\midrule
+ADR-001 Architektur & Geschlossene Layered Architecture & Unstrukturierter Monolith, hexagonale Architektur & Klare Verantwortlichkeiten bei überschaubarer Komplexität; Abhängigkeit bleibt von oben nach unten gerichtet. \\
+ADR-002 Bereitstellung & Modularer Monolith & Microservices & Geringerer Betriebsaufwand; Backend kann nicht nach Fachbereichen unabhängig bereitgestellt werden. \\
+ADR-003 Client-Anbindung & REST und JSON & Serverseitige Darstellung, GraphQL & Klare Trennung zwischen React-Frontend und Backend; mehrere synchrone HTTP-Aufrufe erforderlich. \\
+ADR-004 Persistenz & Spring JDBC und PostgreSQL & Spring Data JPA, In-Memory-Speicherung & Explizite Kontrolle der SQL-Abfragen; manuelles Mapping und eigene Transaktionsgestaltung erforderlich. \\
+ADR-005 Lokaler Betrieb & Docker Compose & Manuelle Prozessstarts & Reproduzierbare Umgebung; Konfiguration ist auf einen einzelnen Entwicklungsrechner ausgerichtet. \\
+\bottomrule
+\end{tabularx}
+\caption{Wesentliche Architekturentscheidungen}
+\label{tab:architecture-decisions}
+\end{table}
+
+\clearpage
+\setcounter{section}{10}
+
+
+
+% =================  11 Risiken und technische Schulden  ========================
+
+\section{Risiken und technische Schulden}
+\label{sec:risks}
+
+{\small
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{L{3.4cm} L{1.7cm} L{4.4cm} L{4.4cm}}
+\toprule
+\textbf{Risiko oder Schuld} & \textbf{Relevanz} & \textbf{Auswirkung} & \textbf{Mögliche Maßnahme} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Risiko oder Schuld} & \textbf{Relevanz} & \textbf{Auswirkung} & \textbf{Mögliche Maßnahme} \\
+\midrule
 \endhead
-\bottomrule\noalign{}
-\endlastfoot
-Schichtenarchitektur muss verwendet werden &  Die Anwendung muss in der Schichtenarchitektur umgesetzt werden, da im Rahmen der Vorlesung ein Projekt mit einer selbstausgewählten Software-Architektur umgesetzt werden muss \\\\
-Arc42 als Dokumentationsform & Das Projekt ist auf Vorgabe des Professors gemäß dem arc42-Template zu dokumentieren \\\\
-Begrenzte Ressourcen und Zeit & Das Projekt wird von drei Studierenden neben dem Studium umgesetzt und muss bis zum 29.06.2026 fertiggestellt werden \\
+\bottomrule
+\endfoot
+Fehlende Transaktionsgrenzen & Hoch & Bewerbung und Historieneintrag können bei einem Teilfehler unterschiedliche Zustände aufweisen. & Schreibende Service-Methoden mit \texttt{@Transactional} ausführen. \\
+Undo-Persistenz & Hoch & Der Rücksetzzeitpunkt des ursprünglichen Historieneintrags wird nicht explizit aktualisiert und kann nach erneutem Laden verloren sein. & Repository-Methode zum Aktualisieren von \texttt{undone\_at} ergänzen und testen. \\
+Doppelte Statusregeln & Mittel & Frontend- und Backend-Regeln können bei Änderungen auseinanderlaufen. & Backend als alleinige fachliche Quelle behandeln oder Statusmetadaten über die API bereitstellen. \\
+N+1-Abfragen & Mittel & Beim Laden aller Bewerbungen wird für jede Bewerbung eine zusätzliche Historienabfrage ausgeführt. & Bewerbungen und Historien gebündelt laden und im Repository gruppieren. \\
+Fehlende Benutzerauthentifizierung & Mittel & Alle Bewerbungen gehören zu einem gemeinsamen Datenbestand; kein Mehrbenutzerbetrieb möglich. & Authentifizierung und Besitzerzuordnung bei einer Weiterentwicklung ergänzen. \\
+Fest hinterlegte lokale Konfiguration & Mittel & Zugangsdaten und CORS-Adressen sind nicht für andere Umgebungen geeignet. & Umgebungsabhängige Konfiguration und Secret-Verwaltung einsetzen. \\
+Vite-Entwicklungsserver & Niedrig & Das Frontend-Deployment ist nicht für einen produktiven Betrieb optimiert. & Produktions-Build erzeugen und über einen statischen Webserver bereitstellen. \\
+Begrenzte automatisierte Absicherung & Mittel & Fehler in Statusregeln, Undo und Persistenz können unentdeckt bleiben. & Unit- und Integrationstests für Service, Repository und REST-Endpunkte ergänzen. \\
 \end{longtable}
-\newpage
-\section{Kontextabgrenzung}\label{section-context-and-scope}
+}
 
-\textbf{Inhalt}
+Die Risiken sind für einen Lehrveranstaltungsprototyp vertretbar, begrenzen jedoch die Eignung für einen produktiven Betrieb. Besonders die transaktionale Konsistenz und die Undo-Persistenz sollten vor einer Weiterverwendung korrigiert werden.
 
-Die Kontextabgrenzung grenzt das System gegen alle Kommunikationspartner
-(Nachbarsysteme und Benutzerrollen) ab. Sie legt damit die externen
-Schnittstellen fest und zeigt damit auch die Verantwortlichkeit (scope)
-Ihres Systems: Welche Verantwortung trägt das System und welche
-Verantwortung übernehmen die Nachbarsysteme?
+\clearpage
 
-Differenzieren Sie fachlichen (Ein- und Ausgaben) und technischen
-Kontext (Kanäle, Protokolle, Hardware), falls nötig.
 
-\textbf{Motivation}
 
-Die fachlichen und technischen Schnittstellen zur Kommunikation gehören
-zu den kritischsten Aspekten eines Systems. Stellen Sie sicher, dass Sie
-diese komplett verstanden haben.
+% ===========================  Literaturverzeichnis  =============================
 
-\textbf{Form}
+\addcontentsline{toc}{section}{Literaturverzeichnis}
+\begin{thebibliography}{9}
 
-Verschiedene Optionen:
+\bibitem{richards2020}
+Mark Richards und Neal Ford:
+\textit{Handbuch moderner Softwarearchitektur}.
+O'Reilly Media, 2020.
 
-\begin{itemize}
-\item
-  Diverse Kontextdiagramme
-\item
-  Listen von Kommunikationsbeziehungen mit deren Schnittstellen
-\end{itemize}
+\bibitem{arc42}
+Peter Hruschka, Gernot Starke und Mitwirkende:
+\textit{arc42 -- Template zur Dokumentation von Software- und Systemarchitekturen}.
+\url{https://arc42.org/}, abgerufen am 31. Juli 2026.
 
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-3/}{Kontextabgrenzung} in der
-online-Dokumentation (auf Englisch!).
-
-\subsection{Fachlicher Kontext}\label{_fachlicher_kontext}
-
-\textbf{Inhalt}
-
-Festlegung \textbf{aller} Kommunikationsbeziehungen (Nutzer, IT-Systeme,
-\ldots\hspace{0pt}) mit Erklärung der fachlichen Ein- und Ausgabedaten
-oder Schnittstellen. Zusätzlich (bei Bedarf) fachliche Datenformate oder
-Protokolle der Kommunikation mit den Nachbarsystemen.
-
-\textbf{Motivation}
-
-Alle Beteiligten müssen verstehen, welche fachlichen Informationen mit
-der Umwelt ausgetauscht werden.
-
-\textbf{Form}
-
-Alle Diagrammarten, die das System als Blackbox darstellen und die
-fachlichen Schnittstellen zu den Nachbarsystemen beschreiben.
-
-Alternativ oder ergänzend können Sie eine Tabelle verwenden. Der Titel
-gibt den Namen Ihres Systems wieder; die drei Spalten sind:
-Kommunikationsbeziehung, Eingabe, Ausgabe.
-
-\textbf{\textless Diagramm und/oder Tabelle\textgreater{}}
-
-\textbf{\textless optional: Erläuterung der externen fachlichen
-Schnittstellen\textgreater{}}
-
-\subsection{Technischer Kontext}\label{_technischer_kontext}
-
-\textbf{Inhalt}
-
-Technische Schnittstellen (Kanäle, Übertragungsmedien) zwischen dem
-System und seiner Umwelt. Zusätzlich eine Erklärung (\emph{mapping}),
-welche fachlichen Ein- und Ausgaben über welche technischen Kanäle
-fließen.
-
-\textbf{Motivation}
-
-Viele Stakeholder treffen Architekturentscheidungen auf Basis der
-technischen Schnittstellen des Systems zu seinem Kontext.
-
-Insbesondere bei der Entwicklung von Infrastruktur oder Hardware sind
-diese technischen Schnittstellen durchaus entscheidend.
-
-\textbf{Form}
-
-Beispielsweise UML Deployment-Diagramme mit den Kanälen zu
-Nachbarsystemen, begleitet von einer Tabelle, die Kanäle auf
-Ein-/Ausgaben abbildet.
-
-\textbf{\textless Diagramm oder Tabelle\textgreater{}}
-
-\textbf{\textless optional: Erläuterung der externen technischen
-Schnittstellen\textgreater{}}
-
-\textbf{\textless Mapping fachliche auf technische
-Schnittstellen\textgreater{}}
-\newpage
-\section{Lösungsstrategie}\label{section-solution-strategy}
-
-\textbf{Inhalt}
-
-Kurzer Überblick über die grundlegenden Entscheidungen und
-Lösungsansätze, die Entwurf und Implementierung des Systems prägen.
-Hierzu gehören:
-
-\begin{itemize}
-\item
-  Technologieentscheidungen
-\item
-  Entscheidungen über die Top-Level-Zerlegung des Systems,
-  beispielsweise die Verwendung gesamthaft prägender Entwurfs- oder
-  Architekturmuster,
-\item
-  Entscheidungen zur Erreichung der wichtigsten Qualitätsanforderungen
-  sowie
-\item
-  relevante organisatorische Entscheidungen, beispielsweise für
-  bestimmte Entwicklungsprozesse oder Delegation bestimmter Aufgaben an
-  andere Stakeholder.
-\end{itemize}
-
-\textbf{Motivation}
-
-Diese wichtigen Entscheidungen bilden wesentliche „Eckpfeiler`` der
-Architektur. Von ihnen hängen viele weitere Entscheidungen oder
-Implementierungsregeln ab.
-
-\textbf{Form}
-
-Fassen Sie die zentralen Entwurfsentscheidungen \textbf{kurz} zusammen.
-Motivieren Sie, ausgehend von Aufgabenstellung, Qualitätszielen und
-Randbedingungen, was Sie entschieden haben und warum Sie so entschieden
-haben. Vermeiden Sie redundante Beschreibungen und verweisen Sie eher
-auf weitere Ausführungen in Folgeabschnitten.
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-4/}{Lösungsstrategie} in der
-online-Dokumentation (auf Englisch!).
-\newpage
-\section{Bausteinsicht}\label{section-building-block-view}
-
-\textbf{Inhalt}
-
-Die Bausteinsicht zeigt die statische Zerlegung des Systems in Bausteine
-(Module, Komponenten, Subsysteme, Klassen, Schnittstellen, Pakete,
-Bibliotheken, Frameworks, Schichten, Partitionen, Tiers, Funktionen,
-Makros, Operationen, Datenstrukturen, \ldots\hspace{0pt}) sowie deren
-Abhängigkeiten (Beziehungen, Assoziationen, \ldots\hspace{0pt})
-
-Diese Sicht sollte in jeder Architekturdokumentation vorhanden sein. In
-der Analogie zum Hausbau bildet die Bausteinsicht den
-\emph{Grundrissplan}.
-
-\textbf{Motivation}
-
-Behalten Sie den Überblick über den Quellcode, indem Sie die statische
-Struktur des Systems durch Abstraktion verständlich machen.
-
-Damit ermöglichen Sie Kommunikation auf abstrakterer Ebene, ohne zu
-viele Implementierungsdetails offenlegen zu müssen.
-
-\textbf{Form}
-
-Die Bausteinsicht ist eine hierarchische Sammlung von Blackboxen und
-Whiteboxen (siehe Abbildung unten) und deren Beschreibungen.
-
-\textbf{Ebene 1} ist die Whitebox-Beschreibung des Gesamtsystems,
-zusammen mit Blackbox-Beschreibungen der darin enthaltenen Bausteine.
-
-\textbf{Ebene 2} zoomt in einige Bausteine der Ebene 1 hinein. Sie
-enthält somit die Whitebox-Beschreibungen ausgewählter Bausteine der
-Ebene 1, jeweils zusammen mit Blackbox-Beschreibungen darin enthaltener
-Bausteine.
-
-\textbf{Ebene 3} zoomt in einige Bausteine der Ebene 2 hinein, usw.
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-5/}{Bausteinsicht} in der
-online-Dokumentation (auf Englisch!).
-
-\subsection{Whitebox Gesamtsystem}\label{_whitebox_gesamtsystem}
-
-An dieser Stelle beschreiben Sie die Zerlegung des Gesamtsystems anhand
-des nachfolgenden Whitebox-Templates. Dieses enthält:
-
-\begin{itemize}
-\item
-  Ein Übersichtsdiagramm
-\item
-  die Begründung dieser Zerlegung
-\item
-  Blackbox-Beschreibungen der hier enthaltenen Bausteine. Dafür haben
-  Sie verschiedene Optionen:
-
-  \begin{itemize}
-  \item
-    in \emph{einer} Tabelle, gibt einen kurzen und pragmatischen
-    Überblick über die enthaltenen Bausteine sowie deren Schnittstellen.
-  \item
-    als Liste von Blackbox-Beschreibungen der Bausteine, gemäß dem
-    Blackbox-Template (siehe unten). Diese Liste können Sie, je nach
-    Werkzeug, etwa in Form von Unterkapiteln (Text), Unter-Seiten (Wiki)
-    oder geschachtelten Elementen (Modellierungswerkzeug) darstellen.
-  \end{itemize}
-\item
-  (optional:) wichtige Schnittstellen, die nicht bereits im
-  Blackbox-Template eines der Bausteine erläutert werden, aber für das
-  Verständnis der Whitebox von zentraler Bedeutung sind. Aufgrund der
-  vielfältigen Möglichkeiten oder Ausprägungen von Schnittstellen geben
-  wir hierzu kein weiteres Template vor. Im schlimmsten Fall müssen Sie
-  Syntax, Semantik, Protokolle, Fehlerverhalten, Restriktionen,
-  Versionen, Qualitätseigenschaften, notwendige Kompatibilitäten und
-  vieles mehr spezifizieren oder beschreiben. Im besten Fall kommen Sie
-  mit Beispielen oder einfachen Signaturen zurecht.
-\end{itemize}
-
-\emph{\textbf{\textless Übersichtsdiagramm\textgreater{}}}
-
-\begin{description}
-\item[Begründung]
-\emph{\textless Erläuternder Text\textgreater{}}
-\item[Enthaltene Bausteine]
-\emph{\textless Beschreibung der enthaltenen Bausteine
-(Blackboxen)\textgreater{}}
-\item[Wichtige Schnittstellen]
-\emph{\textless Beschreibung wichtiger Schnittstellen\textgreater{}}
-\end{description}
-
-Hier folgen jetzt Erläuterungen zu Blackboxen der Ebene 1.
-
-Falls Sie die tabellarische Beschreibung wählen, so werden Blackboxen
-darin nur mit Name und Verantwortung nach folgendem Muster beschrieben:
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.6667}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Name}
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-\textbf{Verantwortung}
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\emph{\textless Blackbox 1\textgreater{}} &
-~\emph{\textless Text\textgreater{}} \\
-\emph{\textless Blackbox 2\textgreater{}} &
-~\emph{\textless Text\textgreater{}} \\
-\end{longtable}
-
-Falls Sie die ausführliche Liste von Blackbox-Beschreibungen wählen,
-beschreiben Sie jede wichtige Blackbox in einem eigenen
-Blackbox-Template. Dessen Überschrift ist jeweils der Namen dieser
-Blackbox.
-
-\subsubsection{\textless Name Blackbox
-1\textgreater{}}\label{_name_blackbox_1}
-
-Beschreiben Sie die \textless Blackbox 1\textgreater{} anhand des
-folgenden Blackbox-Templates:
-
-\begin{itemize}
-\item
-  Zweck/Verantwortung
-\item
-  Schnittstelle(n), sofern diese nicht als eigenständige Beschreibungen
-  herausgezogen sind. Hierzu gehören eventuell auch Qualitäts- und
-  Leistungsmerkmale dieser Schnittstelle.
-\item
-  (Optional) Qualitäts-/Leistungsmerkmale der Blackbox, beispielsweise
-  Verfügbarkeit, Laufzeitverhalten o. Ä.
-\item
-  (Optional) Ablageort/Datei(en)
-\item
-  (Optional) Erfüllte Anforderungen, falls Sie Traceability zu
-  Anforderungen benötigen.
-\item
-  (Optional) Offene Punkte/Probleme/Risiken
-\end{itemize}
-
-\emph{\textless Zweck/Verantwortung\textgreater{}}
-
-\emph{\textless Schnittstelle(n)\textgreater{}}
-
-\emph{\textless(Optional) Qualitäts-/Leistungsmerkmale\textgreater{}}
-
-\emph{\textless(Optional) Ablageort/Datei(en)\textgreater{}}
-
-\emph{\textless(Optional) Erfüllte Anforderungen\textgreater{}}
-
-\emph{\textless(optional) Offene Punkte/Probleme/Risiken\textgreater{}}
-
-\subsubsection{\textless Name Blackbox
-2\textgreater{}}\label{_name_blackbox_2}
-
-\emph{\textless Blackbox-Template\textgreater{}}
-
-\subsubsection{\textless Name Blackbox
-n\textgreater{}}\label{_name_blackbox_n}
-
-\emph{\textless Blackbox-Template\textgreater{}}
-
-\subsubsection{\textless Name Schnittstelle
-1\textgreater{}}\label{_name_schnittstelle_1}
-
-\ldots\hspace{0pt}
-
-\subsubsection{\textless Name Schnittstelle
-m\textgreater{}}\label{_name_schnittstelle_m}
-
-\subsection{Ebene 2}\label{_ebene_2}
-
-Beschreiben Sie den inneren Aufbau (einiger) Bausteine aus Ebene 1 als
-Whitebox.
-
-Welche Bausteine Ihres Systems Sie hier beschreiben, müssen Sie selbst
-entscheiden. Bitte stellen Sie dabei Relevanz vor Vollständigkeit.
-Skizzieren Sie wichtige, überraschende, riskante, komplexe oder
-besonders volatile Bausteine. Normale, einfache oder standardisierte
-Teile sollten Sie weglassen.
-
-\subsubsection{\texorpdfstring{Whitebox \emph{\textless Baustein
-1\textgreater{}}}{Whitebox \textless Baustein 1\textgreater{}}}\label{_whitebox_baustein_1}
-
-\ldots\hspace{0pt}zeigt das Innenleben von \emph{Baustein 1}.
-
-\emph{\textless Whitebox-Template\textgreater{}}
-
-\subsubsection{\texorpdfstring{Whitebox \emph{\textless Baustein
-2\textgreater{}}}{Whitebox \textless Baustein 2\textgreater{}}}\label{_whitebox_baustein_2}
-
-\emph{\textless Whitebox-Template\textgreater{}}
-
-\ldots\hspace{0pt}
-
-\subsubsection{\texorpdfstring{Whitebox \emph{\textless Baustein
-m\textgreater{}}}{Whitebox \textless Baustein m\textgreater{}}}\label{_whitebox_baustein_m}
-
-\emph{\textless Whitebox-Template\textgreater{}}
-
-\subsection{Ebene 3}\label{_ebene_3}
-
-Beschreiben Sie den inneren Aufbau (einiger) Bausteine aus Ebene 2 als
-Whitebox.
-
-Bei tieferen Gliederungen der Architektur kopieren Sie diesen Teil von
-arc42 für die weiteren Ebenen.
-
-\subsubsection{Whitebox \textless\_Baustein
-x.1\_\textgreater{}}\label{_whitebox_baustein_x_1}
-
-\ldots\hspace{0pt}zeigt das Innenleben von \emph{Baustein x.1}.
-
-\emph{\textless Whitebox-Template\textgreater{}}
-
-\subsubsection{Whitebox \textless\_Baustein
-x.2\_\textgreater{}}\label{_whitebox_baustein_x_2}
-
-\emph{\textless Whitebox-Template\textgreater{}}
-
-\subsubsection{Whitebox \textless\_Baustein
-y.1\_\textgreater{}}\label{_whitebox_baustein_y_1}
-
-\emph{\textless Whitebox-Template\textgreater{}}
-\newpage
-\section{Laufzeitsicht}\label{section-runtime-view}
-
-\textbf{Inhalt}
-
-Diese Sicht erklärt konkrete Abläufe und Beziehungen zwischen Bausteinen
-in Form von Szenarien aus den folgenden Bereichen:
-
-\begin{itemize}
-\item
-  Wichtige Abläufe oder \emph{Features}: Wie führen die Bausteine der
-  Architektur die wichtigsten Abläufe durch?
-\item
-  Interaktionen an kritischen externen Schnittstellen: Wie arbeiten
-  Bausteine mit Nutzern und Nachbarsystemen zusammen?
-\item
-  Betrieb und Administration: Inbetriebnahme, Start, Stop.
-\item
-  Fehler- und Ausnahmeszenarien
-\end{itemize}
-
-Anmerkung: Das Kriterium für die Auswahl der möglichen Szenarien (d.h.
-Abläufe) des Systems ist deren Architekturrelevanz. Es geht nicht darum,
-möglichst viele Abläufe darzustellen, sondern eine angemessene Auswahl
-zu dokumentieren.
-
-\textbf{Motivation}
-
-Sie sollten verstehen, wie (Instanzen von) Bausteine(n) Ihres Systems
-ihre jeweiligen Aufgaben erfüllen und zur Laufzeit miteinander
-kommunizieren.
-
-Nutzen Sie diese Szenarien in der Dokumentation hauptsächlich für eine
-verständlichere Kommunikation mit denjenigen Stakeholdern, die die
-statischen Modelle (z.B. Bausteinsicht, Verteilungssicht) weniger
-verständlich finden.
-
-\textbf{Form}
-
-Für die Beschreibung von Szenarien gibt es zahlreiche
-Ausdrucksmöglichkeiten. Nutzen Sie beispielsweise:
-
-\begin{itemize}
-\item
-  Nummerierte Schrittfolgen oder Aufzählungen in Umgangssprache
-\item
-  Aktivitäts- oder Flussdiagramme
-\item
-  Sequenzdiagramme
-\item
-  BPMN (Geschäftsprozessmodell und -notation) oder EPKs
-  (Ereignis-Prozessketten)
-\item
-  Zustandsautomaten
-\item
-  \ldots\hspace{0pt}
-\end{itemize}
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-6/}{Laufzeitsicht} in der
-online-Dokumentation (auf Englisch!).
-
-\subsection{\texorpdfstring{\emph{\textless Bezeichnung Laufzeitszenario
-1\textgreater{}}}{\textless Bezeichnung Laufzeitszenario 1\textgreater{}}}\label{_bezeichnung_laufzeitszenario_1}
-
-\begin{itemize}
-\item
-  \textless hier Laufzeitdiagramm oder Ablaufbeschreibung
-  einfügen\textgreater{}
-\item
-  \textless hier Besonderheiten bei dem Zusammenspiel der Bausteine in
-  diesem Szenario erläutern\textgreater{}
-\end{itemize}
-
-\subsection{\texorpdfstring{\emph{\textless Bezeichnung Laufzeitszenario
-2\textgreater{}}}{\textless Bezeichnung Laufzeitszenario 2\textgreater{}}}\label{_bezeichnung_laufzeitszenario_2}
-
-\ldots\hspace{0pt}
-
-\subsection{\texorpdfstring{\emph{\textless Bezeichnung Laufzeitszenario
-n\textgreater{}}}{\textless Bezeichnung Laufzeitszenario n\textgreater{}}}\label{_bezeichnung_laufzeitszenario_n}
-
-\ldots\hspace{0pt}
-\newpage
-\section{Verteilungssicht}\label{section-deployment-view}
-
-\textbf{Inhalt}
-
-Die Verteilungssicht beschreibt:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  die technische Infrastruktur, auf der Ihr System ausgeführt wird, mit
-  Infrastrukturelementen wie Standorten, Umgebungen, Rechnern,
-  Prozessoren, Kanälen und Netztopologien sowie sonstigen Bestandteilen,
-  und
-\item
-  die Abbildung von (Software-)Bausteinen auf diese Infrastruktur.
-\end{enumerate}
-
-Häufig laufen Systeme in unterschiedlichen Umgebungen, beispielsweise
-Entwicklung-/Test- oder Produktionsumgebungen. In solchen Fällen sollten
-Sie alle relevanten Umgebungen aufzeigen.
-
-Nutzen Sie die Verteilungssicht insbesondere dann, wenn Ihre Software
-auf mehr als einem Rechner, Prozessor, Server oder Container abläuft
-oder Sie Ihre Hardware sogar selbst konstruieren.
-
-Aus Softwaresicht genügt es, auf die Aspekte zu achten, die für die
-Softwareverteilung relevant sind. Insbesondere bei der
-Hardwareentwicklung kann es notwendig sein, die Infrastruktur mit
-beliebigen Details zu beschreiben.
-
-\textbf{Motivation}
-
-Software läuft nicht ohne Infrastruktur. Diese zugrundeliegende
-Infrastruktur beeinflusst Ihr System und/oder querschnittliche
-Lösungskonzepte, daher müssen Sie diese Infrastruktur kennen.
-
-\textbf{Form}
-
-Das oberste Verteilungsdiagramm könnte bereits in Ihrem technischen
-Kontext enthalten sein, mit Ihrer Infrastruktur als EINE Blackbox. Jetzt
-zoomen Sie in diese Infrastruktur mit weiteren Verteilungsdiagrammen
-hinein:
-
-\begin{itemize}
-\item
-  Die UML stellt mit Verteilungsdiagrammen (Deployment diagrams) eine
-  Diagrammart zur Verfügung, um diese Sicht auszudrücken. Nutzen Sie
-  diese, evtl. auch geschachtelt, wenn Ihre Verteilungsstruktur es
-  verlangt.
-\item
-  Falls Ihre Infrastruktur-Stakeholder andere Diagrammarten bevorzugen,
-  die beispielsweise Prozessoren und Kanäle zeigen, sind diese hier
-  ebenfalls einsetzbar.
-\end{itemize}
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-7/}{Verteilungssicht} in der
-online-Dokumentation (auf Englisch!).
-
-\subsection{Infrastruktur Ebene 1}\label{_infrastruktur_ebene_1}
-
-An dieser Stelle beschreiben Sie (als Kombination von Diagrammen mit
-Tabellen oder Texten):
-
-\begin{itemize}
-\item
-  die Verteilung des Gesamtsystems auf mehrere Standorte, Umgebungen,
-  Rechner, Prozessoren o. Ä., sowie die physischen Verbindungskanäle
-  zwischen diesen,
-\item
-  wichtige Begründungen für diese Verteilungsstruktur,
-\item
-  Qualitäts- und/oder Leistungsmerkmale dieser Infrastruktur,
-\item
-  Zuordnung von Softwareartefakten zu Bestandteilen der Infrastruktur
-\end{itemize}
-
-Für mehrere Umgebungen oder alternative Deployments kopieren Sie diesen
-Teil von arc42 für alle wichtigen Umgebungen/Varianten.
-
-\emph{\textbf{\textless Übersichtsdiagramm\textgreater{}}}
-
-\begin{description}
-\item[Begründung]
-\emph{\textless Erläuternder Text\textgreater{}}
-\item[Qualitäts- und/oder Leistungsmerkmale]
-\emph{\textless Erläuternder Text\textgreater{}}
-\item[Zuordnung von Bausteinen zu Infrastruktur]
-\emph{\textless Beschreibung der Zuordnung\textgreater{}}
-\end{description}
-
-\subsection{Infrastruktur Ebene 2}\label{_infrastruktur_ebene_2}
-
-An dieser Stelle können Sie den inneren Aufbau (einiger)
-Infrastrukturelemente aus Ebene 1 beschreiben.
-
-Für jedes Infrastrukturelement kopieren Sie die Struktur aus Ebene 1.
-
-\subsubsection{\texorpdfstring{\emph{\textless Infrastrukturelement
-1\textgreater{}}}{\textless Infrastrukturelement 1\textgreater{}}}\label{_infrastrukturelement_1}
-
-\emph{\textless Diagramm + Erläuterungen\textgreater{}}
-
-\subsubsection{\texorpdfstring{\emph{\textless Infrastrukturelement
-2\textgreater{}}}{\textless Infrastrukturelement 2\textgreater{}}}\label{_infrastrukturelement_2}
-
-\emph{\textless Diagramm + Erläuterungen\textgreater{}}
-
-\ldots\hspace{0pt}
-
-\subsubsection{\texorpdfstring{\emph{\textless Infrastrukturelement
-n\textgreater{}}}{\textless Infrastrukturelement n\textgreater{}}}\label{_infrastrukturelement_n}
-
-\emph{\textless Diagramm + Erläuterungen\textgreater{}}
-\newpage
-\section{Querschnittliche Konzepte}\label{section-concepts}
-
-\textbf{Inhalt}
-
-Dieser Abschnitt beschreibt übergreifende, prinzipielle Regelungen und
-Lösungsansätze, die an mehreren Stellen (=\emph{querschnittlich})
-relevant sind.
-
-Solche Konzepte betreffen oft mehrere Bausteine. Dazu können vielerlei
-Themen gehören, wie beispielsweise die Themen aus dem nachfolgenden
-Diagramm:
-
-\textbf{Motivation}
-
-Konzepte bilden die Grundlage für \emph{konzeptionelle Integrität}
-(Konsistenz, Homogenität) der Architektur und damit eine wesentliche
-Grundlage für die innere Qualität Ihrer Systeme.
-
-Dieser Abschnitt im Template ist der richtige Ort für die konsistente
-Behandlung solcher Themen.
-
-Viele solche Konzepte beeinflussen oder beziehen sich auf mehrerer Ihrer
-Bausteine.
-
-\textbf{Form}
-
-Kann vielfältig sein:
-
-\begin{itemize}
-\item
-  Konzeptpapiere mit beliebiger Gliederung,
-\item
-  beispielhafte Implementierung speziell für technische Konzepte,
-\item
-  übergreifende Modelle/Szenarien mit Notationen, die Sie auch in den
-  Architektursichten nutzen,
-\end{itemize}
-
-\textbf{Struktur}
-
-Wählen Sie \textbf{nur} die wichtigsten Themen für Ihr System und
-erklären das jeweilige Konzept dann unter einer Level-2 Überschrift
-dieser Sektion (z.B. 8.1, 8.2 etc).
-
-Beschränken Sie sich auf die wichtigen, und versuchen \textbf{auf keinen
-Fall} alle oben dargestellten Themen zu bearbeiten.
-
-\textbf{Weiterführende Informationen}
-
-Einige Themen innerhalb von Systemen betreffen oft mehrere Bausteine,
-Hardwareelemente oder Prozesse. Es könnte einfacher sein, solche
-\emph{Querschnittsthemen} an einer zentralen Stelle zu kommunizieren
-oder zu dokumentieren, anstatt sie in der Beschreibung der betreffenden
-Bausteine, Hardwareelemente oder Entwicklungsprozesse zu wiederholen.
-
-Bestimmte Konzepte können \textbf{alle} Elemente eines Systems
-betreffen, andere sind vielleicht nur für einige wenige relevant.
-
-Siehe \href{https://docs.arc42.org/section-8/}{Querschnittliche
-Konzepte} in der online-Dokumentation (auf Englisch).
-
-\subsection{\texorpdfstring{\emph{\textless Konzept
-1\textgreater{}}}{\textless Konzept 1\textgreater{}}}\label{_konzept_1}
-
-\emph{\textless Erklärung\textgreater{}}
-
-\subsection{\texorpdfstring{\emph{\textless Konzept
-2\textgreater{}}}{\textless Konzept 2\textgreater{}}}\label{_konzept_2}
-
-\emph{\textless Erklärung\textgreater{}}
-
-\ldots\hspace{0pt}
-
-\subsection{\texorpdfstring{\emph{\textless Konzept
-n\textgreater{}}}{\textless Konzept n\textgreater{}}}\label{_konzept_n}
-
-\emph{\textless Erklärung\textgreater{}}
-\newpage
-\section{Architekturentscheidungen}\label{section-design-decisions}
-
-\textbf{Inhalt}
-
-Wichtige, teure, große oder riskante Architektur- oder
-Entwurfsentscheidungen inklusive der jeweiligen Begründungen. Mit
-"Entscheidungen" meinen wir hier die Auswahl einer von mehreren
-Alternativen unter vorgegebenen Kriterien.
-
-Wägen Sie ab, inwiefern Sie Entscheidungen hier zentral beschreiben,
-oder wo eine lokale Beschreibung (z.B. in der Whitebox-Sicht von
-Bausteinen) sinnvoller ist. Vermeiden Sie Redundanz. Verweisen Sie evtl.
-auf Abschnitt 4, wo schon grundlegende strategische Entscheidungen
-beschrieben wurden.
-
-\textbf{Motivation}
-
-Stakeholder des Systems sollten wichtige Entscheidungen verstehen und
-nachvollziehen können.
-
-\textbf{Form}
-
-Verschiedene Möglichkeiten:
-
-\begin{itemize}
-\item
-  ADR
-  (\href{https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions}{Documenting
-  Architecture Decisions}) für jede wichtige Entscheidung
-\item
-  Liste oder Tabelle, nach Wichtigkeit und Tragweite der Entscheidungen
-  geordnet
-\item
-  ausführlicher in Form einzelner Unterkapitel je Entscheidung
-\end{itemize}
-
-\textbf{Weiterführende Informationen}
-
-Siehe
-\href{https://docs.arc42.org/section-9/}{Architekturentscheidungen} in
-der arc42 Dokumentation (auf Englisch!). Dort finden Sie Links und
-Beispiele zum Thema ADR.
-\newpage
-\section{Qualitätsanforderungen}\label{section-quality-scenarios}
-
-\textbf{Inhalt}
-
-Dieser Abschnitt enthält alle relevanten Qualitätsanforderungen.
-
-Die wichtigsten davon haben Sie bereits in Abschnitt 1.2
-(Qualitätsziele) hervorgehoben, daher soll hier nur auf sie verwiesen
-werden. In diesem Abschnitt 10 sollten Sie auch Qualitätsanforderungen
-mit geringerer Bedeutung erfassen, deren Nichterfüllung keine großen
-Risiken birgt (die aber \emph{nice-to-have} sein könnten).
-
-\textbf{Motivation}
-
-Weil Qualitätsanforderungen die Architekturentscheidungen oft maßgeblich
-beeinflussen, sollten Sie die für Ihre Stakeholder relevanten
-Qualitätsanforderungen kennen, möglichst konkret und operationalisiert.
-
-\begin{itemize}
-\item
-  Siehe
-  \href{https://docs.arc42.org/section-10/}{Qualitätsanforderungen} in
-  der online-Dokumentation (auf Englisch!).
-\item
-  Siehe auch das ausführliche \href{https://quality.arc42.org}{Q42
-  Qualitätsmodell auf https://quality.arc42.org}.
-\end{itemize}
-
-\subsection{Übersicht der
-Qualitätsanforderungen}\label{_uxfcbersicht_der_qualituxe4tsanforderungen}
-
-\textbf{Inhalt}
-
-Eine Übersicht oder Zusammenfassung der Qualitätsanforderungen.
-
-\textbf{Motivation}
-
-Oft stößt man auf Dutzende (oder sogar Hunderte) von detaillierten
-Qualitätsanforderungen für ein System. In diesem Abschnitt sollten Sie
-versuchen, sie zusammenzufassen, z. B. durch die Beschreibung von
-Kategorien oder Themen (wie z.B. von
-\href{https://www.iso.org/obp/ui/\#iso:std:iso-iec:25010:ed-2:v1:en}{ISO
-25010:2023} oder \href{https://quality.arc42.org}{Q42} vorgeschlagen).
-
-Wenn diese Kurzbeschreibungen oder Zusammenfassungen bereits präzise,
-spezifisch und messbar sind, können Sie Abschnitt 10.2 auslassen.
-
-\textbf{Form}
-
-Verwenden Sie eine einfache Tabelle, in der jede Zeile eine Kategorie
-oder ein Thema und eine kurze Beschreibung der Qualitätsanforderung
-enthält. Alternativ können Sie auch eine Mindmap verwenden, um diese
-Qualitätsanforderungen zu strukturieren. In der Literatur (insb.
-{[}Bass+21{]}) ist die Idee eines \emph{Quality Attribute Utility Tree}
-(auf Deutsch manchmal kurz als \emph{Qualitätsbaum} bezeichnet)
-beschrieben worden, der den Oberbegriff „Qualität`` als Wurzel hat und
-eine baumartige Verfeinerung des Begriffs „Qualität`` verwendet.
-
-\subsection{Qualitätsszenarien}\label{_qualituxe4tsszenarien}
-
-\textbf{Inhalt}
-
-Qualitätsszenarien konkretisieren Qualitätsanforderungen und ermöglichen
-es zu entscheiden, ob sie erfüllt sind (im Sinne von
-Akzeptanzkriterien). Stellen Sie sicher, dass Ihre Szenarien spezifisch
-und messbar sind.
-
-Zwei Arten von Szenarien finden wir besonders nützlich:
-
-\begin{itemize}
-\item
-  Nutzungsszenarien (auch bekannt als Anwendungs- oder
-  Anwendungsfallszenarien) beschreiben, wie das System zur Laufzeit auf
-  einen bestimmten Auslöser reagieren soll. Hierunter fallen auch
-  Szenarien zur Beschreibung von Effizienz oder Performance. Beispiel:
-  Das System beantwortet eine Benutzeranfrage innerhalb einer Sekunde.
-\item
-  Änderungsszenarien\_ beschreiben die gewünschte Wirkung einer Änderung
-  oder Erweiterung des Systems oder seiner unmittelbaren Umgebung.
-  Beispiel: Zusätzliche Funktionalität wird implementiert oder
-  Anforderungen an ein Qualitätsmerkmal ändern sich, und der Aufwand
-  oder die Dauer der Änderung wird gemessen.
-\end{itemize}
-
-\textbf{Form}
-
-Typische Informationen für detaillierte Szenarien sind die folgenden:
-
-In Kurzform (bevorzugt im Q42-Modell):
-
-\begin{itemize}
-\item
-  K\textbf{ontext/Hintergrund}: Um welche Art von System oder Komponente
-  handelt es sich, wie sieht die Umgebung oder Situation aus?
-\item
-  \textbf{Quelle/Stimulus}: Wer oder was initiiert oder löst ein
-  Verhalten, eine Reaktion oder eine Aktion aus.
-\item
-  \textbf{Metrik/Akzeptanzkriterien}: Eine Reaktion einschließlich einer
-  \emph{Maßnahme} oder \emph{Metrik}
-\end{itemize}
-
-Die Langform von Szenarien (die von der SEI und {[}Bass+21{]} bevorzugt
-wird) ist detaillierter und enthält die folgenden Informationen:
-
-\begin{itemize}
-\item
-  \textbf{Szenario-ID}: Ein eindeutiger Bezeichner für das Szenario.
-\item
-  \textbf{Szenario-Name}: Ein kurzer, beschreibender Name für das
-  Szenario.
-\item
-  \textbf{Quelle}: Die Entität (Benutzer, System oder Ereignis), die das
-  Szenario auslöst.
-\item
-  \textbf{Stimulus}: Das auslösende Ereignis oder die Bedingung, auf die
-  das System reagieren muss.
-\item
-  \textbf{Umgebung}: Der betriebliche Kontext oder die Bedingungen,
-  unter denen das System den Stimulus erlebt.
-\item
-  \textbf{Artefakt}: Die Bausteine oder anderen Elemente des Systems,
-  die von dem Stimulus betroffen sind.
-\item
-  \textbf{Reaktion}: Das Ergebnis oder Verhalten, das das System als
-  Reaktion auf den Stimulus zeigt.
-\item
-  \textbf{Antwortmaß}: Das Kriterium oder die Metrik, nach der die
-  Antwort des Systems bewertet wird.
-\end{itemize}
-
-\textbf{Beispiele}
-
-Ausführliche Beispiele für Qualitätsanforderungen finden Sie auf
-\href{https://quality.arc42.org}{der Website zum Qualitätsmodell Q42}.
-
-\begin{itemize}
-\item
-  Len Bass, Paul Clements, Rick Kazman: „Software Architecture in
-  Practice``, 4. Auflage, Addison-Wesley, 2021.
-\end{itemize}
-\newpage
-\section{Risiken und technische Schulden}\label{section-technical-risks}
-
-\textbf{Inhalt}
-
-Eine nach Prioritäten geordnete Liste der erkannten Architekturrisiken
-und/oder technischen Schulden.
-
-\begin{quote}
-Risikomanagement ist Projektmanagement für Erwachsene.
-
----  Tim Lister Atlantic Systems Guild
-\end{quote}
-
-Unter diesem Motto sollten Sie Architekturrisiken und/oder technische
-Schulden gezielt ermitteln, bewerten und Ihren Management-Stakeholdern
-(z.B. Projektleitung, Product-Owner) transparent machen.
-
-\textbf{Form}
-
-Liste oder Tabelle von Risiken und/oder technischen Schulden, eventuell
-mit vorgeschlagenen Maßnahmen zur Risikovermeidung, Risikominimierung
-oder dem Abbau der technischen Schulden.
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-11/}{Risiken und technische
-Schulden} in der online-Dokumentation (auf Englisch!).
-
-\section{Glossar}\label{section-glossary}
-
-\textbf{Inhalt}
-
-Die wesentlichen fachlichen und technischen Begriffe, die Stakeholder im
-Zusammenhang mit dem System verwenden.
-
-Nutzen Sie das Glossar ebenfalls als Übersetzungsreferenz, falls Sie in
-mehrsprachigen Teams arbeiten.
-
-\textbf{Motivation}
-
-Sie sollten relevante Begriffe klar definieren, so dass alle Beteiligten
-
-\begin{itemize}
-\item
-  diese Begriffe identisch verstehen, und
-\item
-  vermeiden, mehrere Begriffe für die gleiche Sache zu haben.
-\end{itemize}
-
-\textbf{Form}
-
-Zweispaltige Tabelle mit \textless Begriff\textgreater{} und
-\textless Definition\textgreater.
-
-Eventuell weitere Spalten mit Übersetzungen, falls notwendig.
-
-\textbf{Weiterführende Informationen}
-
-Siehe \href{https://docs.arc42.org/section-12/}{Glossar} in der
-online-Dokumentation (auf Englisch!).
-
-\begin{longtable}[]{@{}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.3333}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.6667}}@{}}
-\toprule\noalign{}
-\begin{minipage}[b]{\linewidth}\raggedright
-Begriff
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-Definition
-\end{minipage} \\
-\midrule\noalign{}
-\endhead
-\bottomrule\noalign{}
-\endlastfoot
-\emph{\textless Begriff-1\textgreater{}} &
-\emph{\textless Definition-1\textgreater{}} \\
-\emph{\textless Begriff-2} &
-\emph{\textless Definition-2\textgreater{}} \\
-\end{longtable}
+\end{thebibliography}
 
 \end{document}
