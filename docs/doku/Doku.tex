@@ -425,60 +425,40 @@ Das System ist als funktionsfähiger Lehrveranstaltungsprototyp und nicht als pr
 
 % ==========================  3 Kontextabgrenzung  =============================
 
+\newpage
 \section{Kontextabgrenzung}
-
 \subsection{Fachlicher Kontext}
 
-Der Bewerbungstracker unterstützt einen Jobsuchenden bei der Verwaltung seiner Bewerbungen. Der Nutzer erfasst Bewerbungsdaten, verändert den aktuellen Status, bearbeitet oder löscht Einträge und ruft Statistiken ab. Das System liefert eine nach Status gruppierte Übersicht, Detailangaben, eine Statushistorie und statistische Kennzahlen. Externe Jobportale, Unternehmenssysteme oder Authentifizierungsdienste sind nicht angebunden.
+Der Jobsuchende ist der einzige externe Kommunikationspartner des Bewerbungstrackers.
+Er kann Bewerbungsdaten erfassen, Einträge bearbeiten oder löschen und den aktuellen Status verändern.
+Das System stellt die Bewerbungen auf einem Kanban-Board dar und zeigt Detailinformationen, Statusänderungen und statistische Kennzahlen an.
+Bei ungültigen Eingaben oder nicht erlaubten Aktionen erhält der Nutzer eine Fehlermeldung.
+Externe Jobportale, Unternehmenssysteme und Authentifizierungsdienste sind nicht angebunden.
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[node distance=4.4cm]
-  \node[actor] (user) {Jobsuchender};
-  \node[system,right=of user,text width=4.1cm] (system) {Bewerbungstracker\\Systemgrenze};
-  \draw[connection,bend left=12] (user) to node[above,align=center]{Bewerbungsdaten, Statusänderungen,\\Such- und Bearbeitungsbefehle} (system);
-  \draw[connection,bend left=12] (system) to node[below,align=center]{Übersicht, Historie,\\Statistiken, Fehlermeldungen} (user);
-\end{tikzpicture}
+\input{diagrams/03-fachlicher-kontext.tex}
 \caption{Fachlicher Kontext des Bewerbungstrackers}
 \label{fig:functional-context}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\begin{tabularx}{\textwidth}{L{3.1cm} Y Y}
-\toprule
-\textbf{Partner} & \textbf{Eingaben} & \textbf{Ausgaben} \\
-\midrule
-Jobsuchender & Firma, Position, Standort, Gehaltsangaben, Fristen, Notizen, Statusänderungen und Suchbegriffe & Bewerbungsboard, Detailansicht, Statushistorie, Statistikwerte und Fehlermeldungen \\
-\bottomrule
-\end{tabularx}
-\caption{Fachliche Ein- und Ausgaben}
-\label{tab:functional-io}
-\end{table}
-
 \subsection{Technischer Kontext}
 
-Die Benutzeroberfläche wird als React-Anwendung im Browser ausgeführt. Sie kommuniziert über HTTP und JSON mit der REST-Schnittstelle des Spring-Boot-Backends. Das Backend verarbeitet die Anfragen und greift über JDBC auf PostgreSQL zu. Vorschläge für Unternehmen, Positionen und Standorte werden aus statischen CSV-Dateien durch das Frontend geladen.
+Der Nutzer greift über einen Webbrowser auf das React-Frontend zu.
+Das Frontend kommuniziert über eine REST-Schnittstelle und JSON-Nachrichten mit dem Spring-Boot-Backend.
+Das Backend verarbeitet die Anfragen und greift über JDBC auf PostgreSQL zu.
+Die Datenbank speichert die Bewerbungen und die zugehörigen Historieneinträge.
+Vorschlagsdaten für Unternehmen, Positionen und Standorte lädt das Frontend direkt aus statischen CSV-Dateien.
+Weitere externe Dienste oder Schnittstellen werden nicht verwendet.
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=1.15cm and 1.05cm]
-  \node[actor] (browser) {Webbrowser};
-  \node[frontend,right=of browser] (frontend) {React-Frontend\\Port 5173};
-  \node[backend,right=of frontend] (backend) {Spring-Boot-Backend\\Port 8080};
-  \node[database,right=of backend] (database) {PostgreSQL\\Port 5432};
-  \node[filebox,above=1.25cm of frontend] (csv) {Statische CSV-Dateien\\Vorschlagsdaten};
-
-  \draw[connection] (browser) -- node[above]{HTTP} (frontend);
-  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
-  \draw[connection] (backend) -- node[above]{JDBC} (database);
-  \draw[connection] (csv) -- node[right]{Dateizugriff} (frontend);
-\end{tikzpicture}%
-}
-\caption{Technischer Kontext}
+\input{diagrams/03-technischer-kontext.tex}
+\caption{Technischer Kontext des Bewerbungstrackers}
 \label{fig:technical-context}
 \end{figure}
+
+
 
 
 

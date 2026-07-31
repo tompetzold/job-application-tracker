@@ -1,0 +1,46 @@
+\begin{tikzpicture}[node distance=4.4cm]
+
+  \node[actor] (user) {
+    Jobsuchender
+  };
+
+  \node[
+    system,
+    right=of user,
+    text width=4.1cm
+  ] (system) {
+    Bewerbungstracker\\
+    Systemgrenze
+  };
+
+  \draw[
+    connection,
+    bend left=12
+  ]
+  (user) to
+  node[
+    above,
+    align=center,
+    font=\small
+  ] {
+    Bewerbungsdaten, Statusänderungen,\\
+    Such- und Bearbeitungsbefehle
+  }
+  (system);
+
+  \draw[
+    connection,
+    bend left=12
+  ]
+  (system) to
+  node[
+    below,
+    align=center,
+    font=\small
+  ] {
+    Übersicht, Historie,\\
+    Statistiken und Fehlermeldungen
+  }
+  (user);
+
+\end{tikzpicture}

@@ -1,0 +1,107 @@
+\begin{tikzpicture}
+
+  \node[
+    actor,
+    text width=2cm
+  ] (browser) at (0,0) {
+    Webbrowser
+  };
+
+  \node[
+    frontend,
+    text width=2.3cm
+  ] (frontend) at (3.6,0) {
+    React-Frontend\\
+    Port 5173
+  };
+
+  \node[
+    backend,
+    text width=2.6cm
+  ] (backend) at (8,0) {
+    Spring-Boot-Backend\\
+    Port 8080
+  };
+
+  \node[
+    database,
+    minimum width=2.5cm
+  ] (database) at (12.5,0) {
+    PostgreSQL\\
+    Port 5432
+  };
+
+  \node[
+    filebox,
+    text width=2.5cm
+  ] (csv) at (3.6,2.5) {
+    Statische CSV-Dateien\\
+    Vorschlagsdaten
+  };
+
+  \draw[connection]
+  (browser) --
+  node[
+    midway,
+    above,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    HTTP
+  }
+  (frontend);
+
+  \draw[connection]
+  (frontend) --
+  node[
+    midway,
+    above,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    REST/JSON
+  }
+  (backend);
+
+  \draw[connection]
+  (backend) --
+  node[
+    midway,
+    above,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    JDBC
+  }
+  (database);
+
+  \draw[connection]
+  (csv) --
+  node[
+    midway,
+    right,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    Dateizugriff
+  }
+  (frontend);
+
+  \begin{scope}[on background layer]
+    \node[
+      draw=gray,
+      dashed,
+      rounded corners=4pt,
+      fit=(frontend)(backend)(database)(csv),
+      inner sep=0.35cm,
+      label={
+        [gray]above:Bewerbungstracker
+      }
+    ] {};
+  \end{scope}
+
+\end{tikzpicture}
