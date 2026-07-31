@@ -1,0 +1,123 @@
+\begin{tikzpicture}[
+  node distance=1.2cm and 2.2cm,
+  font=\small
+]
+
+  \node[
+    actor,
+    text width=3.1cm
+  ] (browser) {
+    Webbrowser\\
+    React-Anwendung
+  };
+
+  \node[
+    frontend,
+    right=2.6cm of browser,
+    yshift=1.25cm,
+    text width=3.5cm
+  ] (frontend) {
+    \textbf{Frontend-Container}\\
+    Bun und Vite\\
+    Port 5173
+  };
+
+  \node[
+    backend,
+    right=2.6cm of browser,
+    yshift=-1.25cm,
+    text width=3.5cm
+  ] (backend) {
+    \textbf{Backend-Container}\\
+    Spring-Boot-JAR\\
+    Java 21 JRE\\
+    Port 8080
+  };
+
+  \node[
+    database,
+    right=2.2cm of backend,
+    minimum width=3.5cm,
+    minimum height=1.8cm
+  ] (postgres) {
+    \textbf{PostgreSQL-Container}\\
+    PostgreSQL 16\\
+    Port 5432
+  };
+
+  \node[
+    filebox,
+    below=1.3cm of postgres,
+    text width=3.2cm
+  ] (volume) {
+    \textbf{Docker-Volume}\\
+    \texttt{postgres\_data}
+  };
+
+  \draw[connection]
+  (browser) --
+  node[
+    above,
+    sloped,
+    fill=white,
+    inner sep=2pt
+  ] {
+    HTTP :5173
+  }
+  (frontend);
+
+  \draw[connection]
+  (browser) --
+  node[
+    below,
+    sloped,
+    fill=white,
+    inner sep=2pt
+  ] {
+    REST/JSON :8080
+  }
+  (backend);
+
+  \draw[connection]
+  (backend) --
+  node[
+    above,
+    fill=white,
+    inner sep=2pt
+  ] {
+    JDBC
+  }
+  node[
+    below,
+    fill=white,
+    inner sep=2pt
+  ] {
+    \texttt{postgres:5432}
+  }
+  (postgres);
+
+  \draw[connection]
+  (postgres) --
+  node[
+    right,
+    fill=white,
+    inner sep=2pt
+  ] {
+    persistiert
+  }
+  (volume);
+
+  \begin{scope}[on background layer]
+    \node[
+      draw=gray,
+      dashed,
+      rounded corners=4pt,
+      fit=(frontend)(backend)(postgres)(volume),
+      inner sep=0.5cm,
+      label={
+        [gray]above:Docker-Compose-Umgebung
+      }
+    ] {};
+  \end{scope}
+
+\end{tikzpicture}

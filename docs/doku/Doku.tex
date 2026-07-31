@@ -804,56 +804,47 @@ Die Bewerbung und der neue Historieneintrag werden nacheinander über das Reposi
 
 \newpage
 \section{Verteilungssicht}
+\label{sec:deployment-view}
 
-Die Anwendung wird lokal über Docker Compose auf drei Container verteilt. Alle Container befinden sich im von Docker Compose erzeugten Netzwerk. Das Frontend ist für den Browser über Port 5173 erreichbar, das Backend über Port 8080. PostgreSQL wird intern über den Servicenamen \texttt{postgres} angesprochen und zusätzlich für Entwicklungszugriffe an Port 5432 des Hosts gebunden.
+Die Anwendung wird lokal über Docker Compose auf drei Container verteilt.
+Der Frontend-Container stellt die React-Anwendung bereit, der Backend-Container führt die Geschäftslogik aus und der PostgreSQL-Container übernimmt die Datenhaltung.
+Alle Container befinden sich in einem gemeinsamen Docker-Netzwerk.
+
+Der Browser lädt das Frontend über Port~5173.
+Die anschließend im Browser ausgeführte React-Anwendung greift über Port~8080 auf die REST-Schnittstelle des Backends zu.
+Das Backend verbindet sich innerhalb des Docker-Netzwerks über \texttt{postgres:5432} mit der Datenbank.
+
+\vspace{0.4cm}
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=1.15cm and 1cm]
-  \node[actor] (browser) {Browser auf Host};
-  \node[frontend,right=of browser] (frontend) {Frontend-Container\\oven/bun:1-alpine\\Port 5173};
-  \node[backend,right=of frontend] (backend) {Backend-Container\\Java 21 JRE\\Port 8080};
-  \node[database,right=of backend] (postgres) {PostgreSQL 16\\Port 5432};
-  \node[filebox,below=1.3cm of postgres] (volume) {Docker-Volume\\postgres\_data};
-
-  \draw[connection] (browser) -- node[above]{HTTP} (frontend);
-  \draw[connection] (frontend) -- node[above]{REST/JSON} (backend);
-  \draw[connection] (backend) -- node[above]{JDBC} (postgres);
-  \draw[connection] (postgres) -- node[right]{persistiert} (volume);
-
-  \begin{scope}[on background layer]
-    \node[draw=gray,dashed,rounded corners=4pt,fit=(frontend)(backend)(postgres)(volume),inner sep=0.45cm,label={[gray]below:Docker-Compose-Umgebung}] {};
-  \end{scope}
-\end{tikzpicture}%
+\resizebox{\textwidth}{!}{
+  \input{diagrams/07-verteilungssicht.tex}
 }
-\caption{Lokale Docker-Infrastruktur}
+\caption{Lokale Verteilung des Bewerbungstrackers}
 \label{fig:deployment}
 \end{figure}
 
-\begin{table}[H]
-\centering
-\begin{tabularx}{\textwidth}{L{3.3cm} L{3.2cm} Y}
-\toprule
-\textbf{Knoten} & \textbf{Artefakt} & \textbf{Besonderheiten} \\
-\midrule
-Frontend-Container & React-/Vite-Anwendung & Start über Bun im Entwicklungsmodus mit Bindung an \texttt{0.0.0.0}. \\
-Backend-Container & Spring-Boot-JAR & Multi-Stage-Build mit Maven und Java 21; Runtime mit schlankem JRE-Image. \\
-PostgreSQL-Container & Datenbank bewerbungstracker & Healthcheck über \texttt{pg\_isready}; persistentes Volume. \\
-\bottomrule
-\end{tabularx}
-\caption{Zuordnung der Softwareartefakte zur Infrastruktur}
-\label{tab:deployment-elements}
-\end{table}
+Der Backend-Container ist vom PostgreSQL-Container abhängig.
+Er wird erst gestartet, nachdem der mit \texttt{pg\_isready} ausgeführte Datenbank-Healthcheck erfolgreich war.
+Der Frontend-Container besitzt ebenfalls eine Startabhängigkeit zum Backend, wartet jedoch nicht auf dessen vollständige Betriebsbereitschaft.
+Das Frontend prüft die Erreichbarkeit deshalb zusätzlich über den Endpunkt \texttt{/api/health}.
 
-Der Backend-Start ist an den erfolgreichen Datenbank-Healthcheck gekoppelt. Das Frontend besitzt keine entsprechende Healthcheck-Abhängigkeit zum Backend. Zugangsdaten und Host-Ports sind für die lokale Entwicklungsumgebung festgelegt und nicht als produktive Sicherheitskonfiguration zu verstehen.
+Die Backend-Adresse des Frontends kann über \texttt{VITE\_API\_BASE\_URL} konfiguriert werden.
+Ohne eine abweichende Konfiguration verwendet das Frontend \texttt{http://localhost:8080}.
+Das Backend erhält die Datenbankadresse und die Zugangsdaten über Spring-Umgebungsvariablen.
+
+Die Datenbankdateien werden im Docker-Volume \texttt{postgres\_data} gespeichert und bleiben dadurch nach einem Neustart der Container erhalten.
+PostgreSQL ist zusätzlich über Port~5432 des Hosts für Entwicklungszugriffe erreichbar.
+Die verwendeten Zugangsdaten und veröffentlichten Ports sind für die lokale Entwicklungsumgebung vorgesehen und stellen keine produktive Sicherheitskonfiguration dar.
+
 
 
 
 % ======================  8 Querschnittliche Konzepte  ==========================
 
+\newpage
 \section{Querschnittliche Konzepte}
-
 \subsection{Statusmodell und Validierung}
 
 Die Statuspipeline ist die zentrale fachliche Regel der Anwendung. Sie ist im Backend als Übergangstabelle implementiert und wird im Frontend zur Steuerung der erlaubten Benutzeraktionen gespiegelt.
@@ -921,8 +912,11 @@ Die Kommunikation zwischen Frontend und Backend erfolgt synchron. Das Frontend w
 
 
 
+
+
 % ======================  9 Architekturentscheidungen  ==========================
 
+\newpage
 \section{Architekturentscheidungen}
 
 Die wesentlichen Entscheidungen werden in kompakter ADR-Form dokumentiert. Kapitel~\ref{sec:solution-strategy} beschreibt die daraus resultierende Gesamtstrategie; die folgende Tabelle hält Alternativen und Konsequenzen fest.
@@ -947,6 +941,8 @@ ADR-005 Lokaler Betrieb & Docker Compose & Manuelle Prozessstarts & Reproduzierb
 
 \clearpage
 \setcounter{section}{10}
+
+
 
 
 
@@ -982,6 +978,8 @@ Begrenzte automatisierte Absicherung & Mittel & Fehler in Statusregeln, Undo und
 Die Risiken sind für einen Lehrveranstaltungsprototyp vertretbar, begrenzen jedoch die Eignung für einen produktiven Betrieb. Besonders die transaktionale Konsistenz und die Undo-Persistenz sollten vor einer Weiterverwendung korrigiert werden.
 
 \clearpage
+
+
 
 
 
