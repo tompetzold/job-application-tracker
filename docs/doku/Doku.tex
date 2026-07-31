@@ -584,7 +584,7 @@ Gemeinsamer Start von Frontend, Backend und Datenbank. \\
 
 
 
-% =============================  5 Bausteinsicht  ===============================
+% =============================  5 Bausteinsicht ✓ ===============================
 
 \newpage
 \section{Bausteinsicht}
@@ -657,8 +657,10 @@ Die SQL-Anweisungen werden über Spring JDBC und das \texttt{JdbcTemplate} ausge
 \newpage
 \subsection{Schnittstelle zwischen Frontend und Backend}
 
-Das Frontend greift ausschließlich über die REST-Schnittstelle auf das Backend zu.
+Das Frontend greift ausschließlich über die REST-Schnittstelle auf das Backend zu. Request- und Response-Daten werden als JSON übertragen. 
+Ungültige Eingaben führen zu \texttt{HTTP 400}, während unbekannte Bewerbungs-IDs mit \texttt{HTTP 404} beantwortet werden.
 
+\vspace{0.5cm}
 \begin{table}[H]
 \centering
 \small
@@ -705,82 +707,102 @@ Bewerbung löschen. \\
 
 
 
-% =============================  6 Laufzeitsicht  ===============================
-\newpage
+% =============================  6 Laufzeitsicht ✓ ===============================
+
 \section{Laufzeitsicht}
+\label{sec:runtime-view}
+
+Die Laufzeitsicht beschreibt das Zusammenspiel der Bausteine bei zentralen Anwendungsfällen.
+Dargestellt werden das Laden und Erstellen von Bewerbungen sowie das Ändern und Zurücksetzen ihres Status.
+
+
+% 6.1 - Laden der Bewerbungen
 \subsection{Laden der Bewerbungen}
 
-Beim Start prüft das Frontend zunächst den Endpunkt \texttt{/api/health}. Anschließend ruft es alle Bewerbungen über \texttt{GET /api/applications} ab. Der Controller delegiert an den Service, dieser an das Repository. Das Repository lädt zunächst die Bewerbungen und danach die jeweilige Historie. Die Domänenobjekte werden in Response-Objekte transformiert und als JSON an das Frontend zurückgegeben. Bei einem Fehler leert das Frontend den lokalen Datenbestand und zeigt das Backend als nicht erreichbar an.
+Beim Start der Anwendung werden die Bewerbungen in folgenden Schritten geladen:
 
+\begin{enumerate}[leftmargin=1.6em,itemsep=0.3em]
+
+  \item Das Frontend ruft zunächst \texttt{GET /api/health} auf und prüft die Erreichbarkeit des Backends.
+
+  \item Nach erfolgreicher Prüfung fordert das Frontend über \texttt{GET /api/applications} alle Bewerbungen an.
+
+  \item Der \texttt{ApplicationController} delegiert die Anfrage an den \texttt{ApplicationService}.
+
+  \item Der Service ruft das \texttt{ApplicationRepository} auf.
+  Das Repository lädt zunächst die Bewerbungen und anschließend für jede Bewerbung die zugehörigen Historieneinträge.
+
+  \item Der \texttt{ApplicationMapper} wandelt die Domänenobjekte in Response-Objekte um.
+  Der Controller gibt diese als JSON an das Frontend zurück.
+
+  \item Das Frontend übernimmt die Bewerbungen in seinen lokalen Zustand.
+  Bei einem Fehler wird der lokale Datenbestand geleert und das Backend als nicht erreichbar angezeigt.
+
+\end{enumerate}
+
+
+% 6.2 - Erstellen einer Bewerbung
 \subsection{Erstellen einer Bewerbung}
+
+Das Frontend übermittelt die eingegebenen Bewerbungsdaten mit einer POST-Anfrage an das Backend.
+Abbildung~\ref{fig:runtime-create} zeigt die Verarbeitung der Anfrage durch die drei Backend-Schichten.
+
+\vspace{0.4cm}
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[x=3.15cm,y=-0.78cm,font=\small]
-  \node[participant] at (0,0) (fe) {Frontend};
-  \node[participant] at (1,0) (co) {Controller};
-  \node[participant] at (2,0) (se) {Service};
-  \node[participant] at (3,0) (re) {Repository};
-  \node[participant] at (4,0) (db) {PostgreSQL};
-
-  \foreach \x in {0,1,2,3,4} {\draw[dashed,gray] (\x,0.45) -- (\x,8.2);}
-
-  \draw[message] (0,1) -- node[above]{POST /api/applications} (1,1);
-  \draw[message] (1,2) -- node[above]{create(Application)} (2,2);
-  \draw[message] (2,3) -- node[above]{save(Application)} (3,3);
-  \node[align=left,fill=white] at (2.25,2.55) {Validierung, Status DRAFT,\\Historieneintrag erzeugen};
-  \draw[message] (3,4) -- node[above]{INSERT applications} (4,4);
-  \draw[return] (4,5) -- node[above]{ID} (3,5);
-  \draw[message] (3,6) -- node[above]{INSERT application\_history} (4,6);
-  \draw[return] (3,7) -- node[above]{gespeicherte Bewerbung} (2,7);
-  \draw[return] (2,7.6) -- node[above]{Application} (1,7.6);
-  \draw[return] (1,8.1) -- node[above]{HTTP 201 + JSON} (0,8.1);
-\end{tikzpicture}%
+\resizebox{\textwidth}{!}{
+  \input{diagrams/06-bewerbung-erstellen.tex}
 }
 \caption{Laufzeitablauf beim Erstellen einer Bewerbung}
 \label{fig:runtime-create}
 \end{figure}
 
-Der Service normalisiert Firma, Position, Standort und Notizen. Firma und Position sind Pflichtfelder. Negative Gehaltswerte und ein Mindestgehalt oberhalb des Maximalgehalts werden abgelehnt. Der initiale Status wird unabhängig von der Frontend-Eingabe auf \texttt{DRAFT} gesetzt.
+Der \texttt{ApplicationService} normalisiert Firma, Position, Standort und Notizen.
+Firma und Position sind Pflichtfelder.
+Negative Gehaltswerte und ein Mindestgehalt oberhalb des Maximalgehalts werden abgelehnt.
+Der initiale Status wird unabhängig von der Frontend-Eingabe auf \texttt{DRAFT} gesetzt.
+Zusätzlich wird ein erster Historieneintrag für die Erstellung der Bewerbung erzeugt.
 
+Bei einer ungültigen Eingabe wird die Verarbeitung vor dem Speichern abgebrochen.
+Der Controller beantwortet die Anfrage in diesem Fall mit \texttt{HTTP 400}.
+
+
+% 6.3 - Ändern und Zurücksetzen eines Status
+\newpage
 \subsection{Ändern und Zurücksetzen eines Status}
+
+Bei einer Statusänderung sendet das Frontend den gewünschten Zielstatus an das Backend.
+Abbildung~\ref{fig:runtime-status} zeigt den erfolgreichen Ablauf einer zulässigen Statusänderung.
+
+\vspace{0.4cm}
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[x=3.15cm,y=-0.78cm,font=\small]
-  \node[participant] at (0,0) (fe) {Frontend};
-  \node[participant] at (1,0) (co) {Controller};
-  \node[participant] at (2,0) (se) {Service};
-  \node[participant] at (3,0) (re) {Repository};
-  \node[participant] at (4,0) (db) {PostgreSQL};
-
-  \foreach \x in {0,1,2,3,4} {\draw[dashed,gray] (\x,0.45) -- (\x,9.1);}
-
-  \draw[message] (0,1) -- node[above]{PATCH /api/applications/\{id\}/status} (1,1);
-  \draw[message] (1,2) -- node[above]{updateStatus(id, status)} (2,2);
-  \draw[message] (2,3) -- node[above]{findById(id)} (3,3);
-  \draw[message] (3,4) -- node[above]{SELECT Bewerbung + Historie} (4,4);
-  \draw[return] (4,5) -- node[above]{Bewerbung} (3,5);
-  \draw[return] (3,5.7) -- node[above]{Bewerbung} (2,5.7);
-  \node[align=left,fill=white] at (2.3,6.25) {Statusübergang prüfen und\\Historieneintrag erzeugen};
-  \draw[message] (2,7) -- node[above]{update + saveHistory} (3,7);
-  \draw[message] (3,7.8) -- node[above]{UPDATE + INSERT} (4,7.8);
-  \draw[return] (3,8.5) -- node[above]{aktualisierte Bewerbung} (2,8.5);
-  \draw[return] (2,9) -- node[above]{HTTP 200 + JSON} (0,9);
-\end{tikzpicture}%
+\resizebox{\textwidth}{!}{
+  \input{diagrams/06-status-aendern.tex}
 }
 \caption{Laufzeitablauf bei einer Statusänderung}
 \label{fig:runtime-status}
 \end{figure}
 
-Das Frontend verhindert bekannte unzulässige Übergänge bereits in der Benutzeroberfläche. Die verbindliche Prüfung erfolgt dennoch im Backend anhand der Übergangstabelle in \texttt{ApplicationStatus}. Beim Zurücksetzen wird der letzte nicht rückgängig gemachte Statuswechsel gesucht. Der aktuelle Status wird auf den vorherigen Status gesetzt und ein zusätzlicher Historieneintrag vom Typ \texttt{STATUS\_CHANGE\_UNDONE} erzeugt.
+Das Frontend verhindert bekannte unzulässige Übergänge bereits in der Benutzeroberfläche.
+Die verbindliche Prüfung erfolgt im Backend anhand der Regeln in \texttt{ApplicationStatus}.
+Bei einem unzulässigen Übergang wird keine Änderung gespeichert.
+Der Controller beantwortet die Anfrage in diesem Fall mit \texttt{HTTP 400}.
+
+Beim Zurücksetzen ermittelt der Service den letzten wirksamen Statuswechsel.
+Der aktuelle Status wird auf den vorherigen Status gesetzt.
+Zusätzlich wird ein Historieneintrag vom Typ \texttt{STATUS\_CHANGE\_UNDONE} erzeugt.
+Die Bewerbung und der neue Historieneintrag werden nacheinander über das Repository gespeichert.
+
+
 
 
 
 % ===========================  7 Verteilungssicht  ==============================
 
+\newpage
 \section{Verteilungssicht}
 
 Die Anwendung wird lokal über Docker Compose auf drei Container verteilt. Alle Container befinden sich im von Docker Compose erzeugten Netzwerk. Das Frontend ist für den Browser über Port 5173 erreichbar, das Backend über Port 8080. PostgreSQL wird intern über den Servicenamen \texttt{postgres} angesprochen und zusätzlich für Entwicklungszugriffe an Port 5432 des Hosts gebunden.

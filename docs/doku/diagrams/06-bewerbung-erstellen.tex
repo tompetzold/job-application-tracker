@@ -1,0 +1,154 @@
+\begin{tikzpicture}[x=3.3cm,y=-0.72cm,font=\small]
+
+  \node[
+    participant,
+    fill=LayerPurple,
+    draw=DarkPurple,
+    font=\bfseries\small
+  ] at (0,0) (frontend) {
+    Frontend
+  };
+
+  \node[
+    participant,
+    fill=LayerBlue,
+    draw=DarkBlue,
+    font=\bfseries\small
+  ] at (1,0) (controller) {
+    Controller
+  };
+
+  \node[
+    participant,
+    fill=LayerGreen,
+    draw=DarkGreen,
+    font=\bfseries\small
+  ] at (2,0) (service) {
+    Service
+  };
+
+  \node[
+    participant,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    font=\bfseries\small
+  ] at (3,0) (repository) {
+    Repository
+  };
+
+  \node[
+    participant,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    font=\bfseries\small
+  ] at (4,0) (database) {
+    PostgreSQL
+  };
+
+  \foreach \x in {0,1,2,3,4} {
+    \draw[dashed,gray]
+    (\x,0.55) --
+    (\x,10.1);
+  }
+
+  \draw[message]
+  (frontend.center |- 0,1.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    POST /api/applications
+  }
+  (controller.center |- 0,1.6);
+
+  \draw[message]
+  (controller.center |- 0,2.3) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    create(Application)
+  }
+  (service.center |- 0,2.3);
+
+  \draw[message]
+  (service.center |- 0,3.4) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    save(Application)
+  }
+  (repository.center |- 0,3.4);
+
+  \draw[message]
+  (repository.center |- 0,4.5) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    INSERT applications
+  }
+  (database.center |- 0,4.5);
+
+  \draw[return]
+  (database.center |- 0,5.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    erzeugte ID
+  }
+  (repository.center |- 0,5.6);
+
+  \draw[message]
+  (repository.center |- 0,6.7) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    INSERT application\_history
+  }
+  (database.center |- 0,6.7);
+
+  \draw[return]
+  (database.center |- 0,7.5) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    gespeichert
+  }
+  (repository.center |- 0,7.5);
+
+  \draw[return]
+  (repository.center |- 0,8.3) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    gespeicherte Bewerbung
+  }
+  (service.center |- 0,8.3);
+
+  \draw[return]
+  (service.center |- 0,9.1) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    Application
+  }
+  (controller.center |- 0,9.1);
+
+  \draw[return]
+  (controller.center |- 0,9.9) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    HTTP 201 + JSON
+  }
+  (frontend.center |- 0,9.9);
+
+\end{tikzpicture}

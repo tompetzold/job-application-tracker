@@ -1,0 +1,214 @@
+\begin{tikzpicture}[x=3.3cm,y=-0.64cm,font=\small]
+
+  \node[
+    participant,
+    fill=LayerPurple,
+    draw=DarkPurple,
+    font=\bfseries\small
+  ] at (0,0) (frontend) {
+    Frontend
+  };
+
+  \node[
+    participant,
+    fill=LayerBlue,
+    draw=DarkBlue,
+    font=\bfseries\small
+  ] at (1,0) (controller) {
+    Controller
+  };
+
+  \node[
+    participant,
+    fill=LayerGreen,
+    draw=DarkGreen,
+    font=\bfseries\small
+  ] at (2,0) (service) {
+    Service
+  };
+
+  \node[
+    participant,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    font=\bfseries\small
+  ] at (3,0) (repository) {
+    Repository
+  };
+
+  \node[
+    participant,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    font=\bfseries\small
+  ] at (4,0) (database) {
+    PostgreSQL
+  };
+
+  \foreach \x in {0,1,2,3,4} {
+    \draw[dashed,gray]
+    (\x,0.55) --
+    (\x,15.5);
+  }
+
+  \draw[message]
+  (frontend.center |- 0,1.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    PATCH /api/applications/\{id\}/status
+  }
+  (controller.center |- 0,1.6);
+
+  \draw[message]
+  (controller.center |- 0,2.3) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    updateStatus(id, status)
+  }
+  (service.center |- 0,2.3);
+
+  \draw[message]
+  (service.center |- 0,3.4) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    findById(id)
+  }
+  (repository.center |- 0,3.4);
+
+  \draw[message]
+  (repository.center |- 0,4.5) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    SELECT Bewerbung und Historie
+  }
+  (database.center |- 0,4.5);
+
+  \draw[return]
+  (database.center |- 0,5.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    gespeicherte Daten
+  }
+  (repository.center |- 0,5.6);
+
+  \draw[return]
+  (repository.center |- 0,6.4) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    Application
+  }
+  (service.center |- 0,6.4);
+
+  \draw[message]
+  (service.center |- 0,7.5) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    update(Application)
+  }
+  (repository.center |- 0,7.5);
+
+  \draw[message]
+  (repository.center |- 0,8.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    UPDATE applications
+  }
+  (database.center |- 0,8.6);
+
+  \draw[return]
+  (database.center |- 0,9.4) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    aktualisiert
+  }
+  (repository.center |- 0,9.4);
+
+  \draw[return]
+  (repository.center |- 0,10.2) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    Application
+  }
+  (service.center |- 0,10.2);
+
+  \draw[message]
+  (service.center |- 0,11.3) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    saveHistory(Application)
+  }
+  (repository.center |- 0,11.3);
+
+  \draw[message]
+  (repository.center |- 0,12.4) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    INSERT application\_history
+  }
+  (database.center |- 0,12.4);
+
+  \draw[return]
+  (database.center |- 0,13.2) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    gespeichert
+  }
+  (repository.center |- 0,13.2);
+
+  \draw[return]
+  (repository.center |- 0,13.9) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    abgeschlossen
+  }
+  (service.center |- 0,13.9);
+
+  \draw[return]
+  (service.center |- 0,14.6) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    Application
+  }
+  (controller.center |- 0,14.6);
+
+  \draw[return]
+  (controller.center |- 0,15.3) --
+  node[
+    above,
+    font=\scriptsize
+  ] {
+    HTTP 200 + JSON
+  }
+  (frontend.center |- 0,15.3);
+
+\end{tikzpicture}
