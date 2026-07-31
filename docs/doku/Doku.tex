@@ -208,7 +208,7 @@
 
 
 
-% ================================  Deckblatt  =================================
+% ================================  Deckblatt ✓ =================================
 
 \hypersetup{pageanchor=false}
 
@@ -302,7 +302,7 @@
 
 
 
-% ===========================  0 Inhaltsverzeichnis  ===========================
+% ===========================  0 Inhaltsverzeichnis ✓ ===========================
 
 \thispagestyle{plain}
 \tableofcontents
@@ -315,7 +315,7 @@
 
 
 
-% ===========================  1 Einführung und Ziele  ===========================
+% ===========================  1 Einführung und Ziele ✓ ===========================
 
 \section{Einführung und Ziele}
 
@@ -381,7 +381,7 @@ Dozent und Prüfer & Prof. Dr. Sebastian Mauser & Begründete und im Code erkenn
 
 
 
-% ============================  2 Randbedingungen  =============================
+% ============================  2 Randbedingungen ✓ =============================
 
 \section{Randbedingungen}
 
@@ -423,7 +423,7 @@ Das System ist als funktionsfähiger Lehrveranstaltungsprototyp und nicht als pr
 
 
 
-% ==========================  3 Kontextabgrenzung  =============================
+% ==========================  3 Kontextabgrenzung ✓ =============================
 
 \newpage
 \section{Kontextabgrenzung}
@@ -435,6 +435,7 @@ Das System stellt die Bewerbungen auf einem Kanban-Board dar und zeigt Detailinf
 Bei ungültigen Eingaben oder nicht erlaubten Aktionen erhält der Nutzer eine Fehlermeldung.
 Externe Jobportale, Unternehmenssysteme und Authentifizierungsdienste sind nicht angebunden.
 
+\vspace{0.5cm}
 \begin{figure}[H]
 \centering
 \input{diagrams/03-fachlicher-kontext.tex}
@@ -451,6 +452,7 @@ Die Datenbank speichert die Bewerbungen und die zugehörigen Historieneinträge.
 Vorschlagsdaten für Unternehmen, Positionen und Standorte lädt das Frontend direkt aus statischen CSV-Dateien.
 Weitere externe Dienste oder Schnittstellen werden nicht verwendet.
 
+\vspace{0.5cm}
 \begin{figure}[H]
 \centering
 \input{diagrams/03-technischer-kontext.tex}
@@ -462,52 +464,54 @@ Weitere externe Dienste oder Schnittstellen werden nicht verwendet.
 
 
 
-% ============================  4 Lösungsstrategie  =============================
+% ============================  4 Lösungsstrategie ✓ =============================
 
 \section{Lösungsstrategie}
 \label{sec:solution-strategy}
 
+
+% 4.1 - Layered Architecture
 \subsection{Layered Architecture}
 
-Die Layered Architecture strukturiert ein Softwaresystem in horizontale Schichten mit klar abgegrenzten Verantwortlichkeiten. Eine Schicht stellt der darüberliegenden Schicht Dienste zur Verfügung und delegiert Aufgaben an die darunterliegende Schicht. Bei einer geschlossenen Schichtenarchitektur werden Schichten nicht übersprungen. Dadurch bleiben Abhängigkeiten gerichtet und die Zuständigkeiten nachvollziehbar \cite{richards2020}.
+Die Layered Architecture gliedert das Backend in Schichten mit klar getrennten Verantwortlichkeiten.
+In der umgesetzten geschlossenen Schichtenarchitektur darf jede Schicht nur auf die unmittelbar darunterliegende Schicht zugreifen \cite{richards2020}.
 
-Für das Backend wurden drei Anwendungsschichten festgelegt:
+Das Backend besteht aus drei Schichten:
 
 \begin{itemize}
-  \item \textbf{Präsentationsschicht:} Entgegennahme von HTTP-Anfragen, Abbildung von Request- und Response-Daten sowie Zuordnung fachlicher Fehler zu HTTP-Statuscodes.
-  \item \textbf{Geschäftslogikschicht:} Validierung von Eingaben, Durchsetzung der Statusregeln, Erzeugung von Historieneinträgen und Koordination fachlicher Abläufe.
-  \item \textbf{Persistenzschicht:} Ausführung der SQL-Anweisungen und Abbildung zwischen relationalen Daten und den fachlichen Objekten.
+  \item \textbf{Präsentationsschicht:} Verarbeitung von HTTP-Anfragen und Umwandlung der Request- und Response-Daten.
+  \item \textbf{Geschäftslogikschicht:} Validierung von Eingaben, Prüfung der Statusregeln und Koordination fachlicher Abläufe.
+  \item \textbf{Persistenzschicht:} Ausführung der SQL-Anweisungen und Abbildung der Datenbankeinträge auf Domänenobjekte.
 \end{itemize}
 
+
+% 4.2 - Umsetzung im Bewerbungstracker
 \subsection{Umsetzung im Bewerbungstracker}
 
-Das Backend ist als modular gegliederter Monolith umgesetzt. Alle Backend-Schichten werden gemeinsam als eine Spring-Boot-Anwendung gebaut und bereitgestellt. Die Abhängigkeiten verlaufen von der Präsentationsschicht über die Geschäftslogik zur Persistenzschicht. Der Controller greift nicht direkt auf das Repository oder die Datenbank zu.
+Das Backend ist als monolithische Spring-Boot-Anwendung umgesetzt.
+Die drei Schichten sind in getrennten Paketen organisiert, werden jedoch gemeinsam gebaut und bereitgestellt.
+Anfragen werden vom \texttt{ApplicationController} über den \texttt{ApplicationService} an das \texttt{ApplicationRepository} weitergegeben, ohne eine Schicht zu überspringen.
+Das React-Frontend ist ein separater Client und kommuniziert über die REST-Schnittstelle mit dem Backend.
+
+\vspace{0.5cm}
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[node distance=0.55cm]
-  \node[layer,fill=LayerPurple,draw=DarkPurple] (client) {React-Frontend\\Darstellung und Benutzerinteraktion};
-  \node[layer,fill=LayerBlue,draw=DarkBlue,below=of client] (presentation) {Präsentationsschicht\\ApplicationController, DTOs, ApplicationMapper};
-  \node[layer,fill=LayerGreen,draw=DarkGreen,below=of presentation] (business) {Geschäftslogikschicht\\ApplicationService, ApplicationStatus, Domänenobjekte};
-  \node[layer,fill=LayerOrange,draw=DarkOrange,below=of business] (persistence) {Persistenzschicht\\ApplicationRepository, JdbcTemplate};
-  \node[database,below=0.7cm of persistence] (database) {PostgreSQL};
-
-  \draw[connection] (client) -- node[right]{REST/JSON} (presentation);
-  \draw[connection] (presentation) -- (business);
-  \draw[connection] (business) -- (persistence);
-  \draw[connection] (persistence) -- node[right]{JDBC} (database);
-
-  \begin{scope}[on background layer]
-    \node[draw=DarkBlue,dashed,rounded corners=3pt,fit=(presentation)(business)(persistence),inner sep=0.3cm,label={[DarkBlue]right:Spring-Boot-Backend}] {};
-  \end{scope}
-\end{tikzpicture}
-\caption{Schichten und Abhängigkeitsrichtung}
+\scalebox{0.9}{
+  \input{diagrams/04-schichtenarchitektur.tex}
+}
+\caption{Schichten und Abhängigkeitsrichtung des Bewerbungstrackers}
 \label{fig:layers}
 \end{figure}
 
-Die Geschäftslogikschicht kennt mit dem konkreten \texttt{ApplicationRepository} die darunterliegende Implementierung. Das entspricht einer klassischen Layered Architecture, nicht einer hexagonalen Architektur mit Ports und Adaptern. Das React-Frontend ist ein separater Client und gehört nicht zu den internen Backend-Schichten.
 
+% 4.3 - Eignung und Konsequenzen
 \subsection{Eignung und Konsequenzen}
+
+Die Layered Architecture wurde im Rahmen des Architekturprojekts als umzusetzender Architekturstil ausgewählt.
+Bei der Übertragung auf den Bewerbungstracker ergeben sich sowohl Vorteile für die Strukturierung des Backends als auch Einschränkungen für dessen Weiterentwicklung.
+
+\vspace{0.2cm}
 
 \begin{table}[H]
 \centering
@@ -515,44 +519,75 @@ Die Geschäftslogikschicht kennt mit dem konkreten \texttt{ApplicationRepository
 \toprule
 \textbf{Vorteile für das Projekt} & \textbf{Nachteile und Konsequenzen} \\
 \midrule
-Klare Zuordnung der Verantwortlichkeiten & Änderungen an durchgehenden Funktionen können mehrere Schichten betreffen. \\
-Geringe konzeptionelle und betriebliche Komplexität & Das Backend wird als Einheit gebaut und bereitgestellt. \\
-Direkte Eignung für eine überschaubare datenorientierte Anwendung & Einzelne Fachbereiche können nicht unabhängig skaliert werden. \\
-Geschäftsregeln liegen zentral im Service & Es besteht die Gefahr, dass einfache Methoden lediglich durch Schichten weitergereicht werden. \\
-Einfacher lokaler Betrieb & Fehler innerhalb des Backend-Prozesses können die gesamte Backend-Funktionalität betreffen. \\
+
+Klare Trennung der Verantwortlichkeiten &
+Schichtübergreifende Funktionen erfordern Änderungen in mehreren Schichten. \\
+
+Zentrale Umsetzung der Geschäftsregeln im \texttt{ApplicationService} &
+Bei wachsendem Funktionsumfang kann der Service zu viele Verantwortlichkeiten übernehmen. \\
+
+Nachvollziehbare Abhängigkeitsrichtung zwischen den Schichten &
+Einfache Operationen werden teilweise ohne zusätzliche Verarbeitung durch mehrere Schichten weitergereicht. \\
+
+Geringe Build- und Bereitstellungskomplexität des Backends &
+Die Backend-Schichten können nicht unabhängig bereitgestellt werden. \\
+
 \bottomrule
 \end{tabularx}
-\caption{Auswirkungen der gewählten Architektur}
+\caption{Vorteile und Konsequenzen der umgesetzten Lösungsstrategie}
 \label{tab:layered-tradeoffs}
 \end{table}
 
-Für den begrenzten Funktionsumfang ist der modulare Monolith angemessener als eine Microservices-Architektur. Eine Aufteilung in unabhängig bereitgestellte Services würde zusätzliche Netzwerkkommunikation, verteilte Fehlerbehandlung und einen höheren Betriebsaufwand verursachen, ohne für den Prototyp einen entsprechenden Nutzen zu liefern.
 
+% 4.4 - Technologie- und Betriebsstrategie
 \subsection{Technologie- und Betriebsstrategie}
+
+Frontend, Backend und Datenbank werden als getrennte Laufzeitkomponenten betrieben.
+Die drei internen Backend-Schichten bleiben dagegen Bestandteil einer gemeinsamen Spring-Boot-Anwendung.
+
+\vspace{0.2cm}
 
 \begin{table}[H]
 \centering
-\begin{tabularx}{\textwidth}{L{3.5cm} L{4cm} Y}
+\begin{tabularx}{\textwidth}{L{2.7cm} L{3.8cm} Y}
 \toprule
-\textbf{Bereich} & \textbf{Technologie} & \textbf{Aufgabe} \\
+\textbf{Bereich} & \textbf{Technologie} & \textbf{Aufgabe im System} \\
 \midrule
-Frontend & React, Vite, Bun & Komponentenbasierte Benutzeroberfläche und Aufruf der REST-Schnittstelle. \\
-Backend & Java 21, Spring Boot, Maven & Ausführung der Layered Architecture und Bereitstellung der API. \\
-Datenzugriff & Spring JDBC & Explizite SQL-Abfragen über \texttt{JdbcTemplate}. \\
-Datenbank & PostgreSQL 16 & Persistenz von Bewerbungen und Historieneinträgen. \\
-Betrieb & Docker Compose & Gemeinsamer Start von Frontend, Backend und Datenbank. \\
+
+Frontend &
+React, Vite und Bun &
+Bereitstellung der browserbasierten Benutzeroberfläche. \\
+
+Backend &
+Java 21, Spring Boot und Maven &
+REST-Schnittstelle, Geschäftslogik und Build des Backends. \\
+
+Datenzugriff &
+Spring JDBC &
+Ausführung der SQL-Abfragen über \texttt{JdbcTemplate}. \\
+
+Datenbank &
+PostgreSQL 16 &
+Speicherung der Bewerbungen und Historieneinträge. \\
+
+Betrieb &
+Docker Compose &
+Gemeinsamer Start von Frontend, Backend und Datenbank. \\
+
 \bottomrule
 \end{tabularx}
-\caption{Technologieübersicht}
-\label{tab:technology-overview}
+\caption{Technologien und ihre Aufgaben im Bewerbungstracker}
+\label{tab:technology-strategy}
 \end{table}
+
+
 
 
 
 % =============================  5 Bausteinsicht  ===============================
 
+\newpage
 \section{Bausteinsicht}
-
 \subsection{Gesamtsystem}
 
 Das Gesamtsystem besteht aus einer React-Single-Page-Application, einem Spring-Boot-Backend und einer PostgreSQL-Datenbank. Statische Vorschlagsdaten werden durch das Frontend geladen und lokal ausgewertet.

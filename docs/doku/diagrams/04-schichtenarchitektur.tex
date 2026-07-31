@@ -1,0 +1,93 @@
+\begin{tikzpicture}[node distance=0.75cm]
+
+  \node[
+    layer,
+    fill=LayerPurple,
+    draw=DarkPurple
+  ] (client) {
+    React-Frontend\\
+    Darstellung und Benutzerinteraktion
+  };
+
+  \node[
+    layer,
+    fill=LayerBlue,
+    draw=DarkBlue,
+    below=1cm of client
+  ] (presentation) {
+    Präsentationsschicht\\
+    ApplicationController, DTOs und ApplicationMapper
+  };
+
+  \node[
+    layer,
+    fill=LayerGreen,
+    draw=DarkGreen,
+    below=of presentation
+  ] (business) {
+    Geschäftslogikschicht\\
+    ApplicationService, ApplicationStatus und Domänenobjekte
+  };
+
+  \node[
+    layer,
+    fill=LayerOrange,
+    draw=DarkOrange,
+    below=of business
+  ] (persistence) {
+    Persistenzschicht\\
+    ApplicationRepository und JdbcTemplate
+  };
+
+  \node[
+    database,
+    below=1.1cm of persistence
+  ] (database) {
+    PostgreSQL
+  };
+
+  \draw[connection]
+  (client) --
+  node[
+    midway,
+    right,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    REST/JSON
+  }
+  (presentation);
+
+  \draw[connection]
+  (presentation) --
+  (business);
+
+  \draw[connection]
+  (business) --
+  (persistence);
+
+  \draw[connection]
+  (persistence) --
+  node[
+    midway,
+    right,
+    fill=white,
+    inner sep=2pt,
+    font=\small
+  ] {
+    JDBC
+  }
+  (database);
+
+  \begin{scope}[on background layer]
+    \node[
+      draw=DarkBlue,
+      dashed,
+      rounded corners=3pt,
+      fit=(presentation)(business)(persistence),
+      inner sep=0.4cm
+    ] {};
+  \end{scope}
+
+\end{tikzpicture}
