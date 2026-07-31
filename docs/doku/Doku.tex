@@ -290,7 +290,7 @@
 \vfill
 
 \begin{center}
-  {\large Weingarten, 2. August 2026}
+  {\large Weingarten, 31. Juli 2026}
 \end{center}
 
 \end{titlepage}
@@ -963,64 +963,132 @@ Bei einer Bereitstellung außerhalb der lokalen Entwicklungsumgebung müsste ein
 
 \newpage
 \section{Architekturentscheidungen}
+\label{sec:architecture-decisions}
 
-Die wesentlichen Entscheidungen werden in kompakter ADR-Form dokumentiert. Kapitel~\ref{sec:solution-strategy} beschreibt die daraus resultierende Gesamtstrategie; die folgende Tabelle hält Alternativen und Konsequenzen fest.
+Die Layered Architecture war der im Architekturprojekt umzusetzende Architekturstil.
+Dokumentiert werden daher die Entscheidungen zu ihrer konkreten Umsetzung im Bewerbungstracker.
+
+
+% ADR-001
+\subsection{ADR-001: Geschlossene Schichtenarchitektur}
+
+\textbf{Kontext.}
+Für das Backend musste eine konkrete Aufteilung der Verantwortlichkeiten festgelegt werden.
+\textbf{Entscheidung.}
+Das Backend besteht aus Präsentations-, Geschäftslogik- und Persistenzschicht.
+Jede Schicht greift nur auf die unmittelbar darunterliegende Schicht zu.
+\textbf{Konsequenz.}
+Die Abhängigkeiten bleiben nachvollziehbar, während schichtübergreifende Funktionen Änderungen in mehreren Paketen erfordern können.
+
+
+% ADR-002
+\subsection{ADR-002: Getrenntes Frontend mit REST-Schnittstelle}
+
+\textbf{Kontext.}
+Benutzeroberfläche und Backend sollen getrennt strukturiert werden.
+\textbf{Entscheidung.}
+Das React-Frontend kommuniziert als separater Client über REST und JSON mit dem Spring-Boot-Backend.
+\textbf{Konsequenz.}
+Beide Teile können unabhängig entwickelt werden, benötigen aber eine klar definierte Schnittstelle und CORS-Konfiguration.
+
+
+% ADR-003
+\subsection{ADR-003: Relationale Persistenz mit Spring JDBC}
+
+\textbf{Kontext.}
+Bewerbungen und Statusänderungen müssen dauerhaft gespeichert werden.
+\textbf{Entscheidung.}
+Die Anwendung verwendet PostgreSQL und explizite SQL-Anweisungen über Spring JDBC.
+\textbf{Konsequenz.}
+SQL-Abfragen bleiben nachvollziehbar, während Mapping und Transaktionen selbst umgesetzt werden müssen.
+
+
+% ADR-004
+\subsection{ADR-004: Lokaler Betrieb mit Docker Compose}
+
+\textbf{Kontext.}
+Die drei Laufzeitkomponenten sollen gemeinsam und reproduzierbar gestartet werden.
+\textbf{Entscheidung.}
+Frontend, Backend und Datenbank werden als getrennte Container betrieben.
+PostgreSQL verwendet ein persistentes Docker-Volume.
+\textbf{Konsequenz.}
+Der lokale Start wird vereinheitlicht, die Konfiguration ist jedoch nicht für einen produktiven Betrieb ausgelegt.
+
+
+
+
+
+% =================  10 Risiken und technische Schulden  =======================
+
+\newpage
+\section{Risiken und technische Schulden}
+\label{sec:risks}
+
+Die aktuelle Implementierung erfüllt die Anforderungen des lokalen Lehrveranstaltungsprototyps.
+Aus der vereinfachten Umsetzung ergeben sich jedoch Einschränkungen hinsichtlich Datenkonsistenz, Wartbarkeit, Skalierbarkeit und Betrieb.
+Die folgende Tabelle beschreibt die erkannten Risiken und mögliche Maßnahmen für eine Weiterentwicklung.
+
+\vspace{0.3cm}
 
 \begin{table}[H]
 \centering
 \small
-\begin{tabularx}{\textwidth}{L{2.4cm} L{3.1cm} L{3cm} Y}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{L{3.5cm} Y Y}
 \toprule
-\textbf{Entscheidung} & \textbf{Gewählte Lösung} & \textbf{Alternative} & \textbf{Begründung und Konsequenz} \\
+\textbf{Risiko oder Schuld} & \textbf{Auswirkung} & \textbf{Mögliche Maßnahme} \\
 \midrule
-ADR-001 Architektur & Geschlossene Layered Architecture & Unstrukturierter Monolith, hexagonale Architektur & Klare Verantwortlichkeiten bei überschaubarer Komplexität; Abhängigkeit bleibt von oben nach unten gerichtet. \\
-ADR-002 Bereitstellung & Modularer Monolith & Microservices & Geringerer Betriebsaufwand; Backend kann nicht nach Fachbereichen unabhängig bereitgestellt werden. \\
-ADR-003 Client-Anbindung & REST und JSON & Serverseitige Darstellung, GraphQL & Klare Trennung zwischen React-Frontend und Backend; mehrere synchrone HTTP-Aufrufe erforderlich. \\
-ADR-004 Persistenz & Spring JDBC und PostgreSQL & Spring Data JPA, In-Memory-Speicherung & Explizite Kontrolle der SQL-Abfragen; manuelles Mapping und eigene Transaktionsgestaltung erforderlich. \\
-ADR-005 Lokaler Betrieb & Docker Compose & Manuelle Prozessstarts & Reproduzierbare Umgebung; Konfiguration ist auf einen einzelnen Entwicklungsrechner ausgerichtet. \\
+
+Fehlende Transaktionsgrenzen &
+Bewerbung und Historieneintrag können bei einem Teilfehler unterschiedliche Zustände aufweisen. &
+Schreibende Service-Methoden mit \texttt{@Transactional} ausführen. \\
+
+\addlinespace[0.15cm]
+
+Undo-Persistenz &
+Der Rücksetzzeitpunkt des ursprünglichen Historieneintrags wird nicht dauerhaft aktualisiert. &
+Repository-Methode zum Aktualisieren von \texttt{undone\_at} ergänzen und testen. \\
+
+\addlinespace[0.15cm]
+
+Doppelte Statusregeln &
+Frontend- und Backend-Regeln können bei Änderungen auseinanderlaufen. &
+Statusregeln ausschließlich im Backend verwalten oder über die API bereitstellen. \\
+
+\addlinespace[0.15cm]
+
+N+1-Abfragen &
+Für jede geladene Bewerbung wird eine zusätzliche Historienabfrage ausgeführt. &
+Bewerbungen und Historieneinträge gemeinsam laden und im Repository gruppieren. \\
+
+\addlinespace[0.15cm]
+
+Fehlender Zugriffsschutz &
+Bei einer externen Bereitstellung könnten alle Clients auf den gemeinsamen Datenbestand zugreifen. &
+Bei einer Weiterentwicklung Authentifizierung und Besitzerzuordnung ergänzen. \\
+
+\addlinespace[0.15cm]
+
+Nur lokale Betriebskonfiguration &
+Festgelegte Zugangsdaten, CORS-Adressen und der Vite-Entwicklungsserver sind nicht für einen produktiven Betrieb geeignet. &
+Umgebungsabhängige Konfiguration, Secret-Verwaltung und einen Frontend-Produktions-Build einsetzen. \\
+
+\addlinespace[0.15cm]
+
+Begrenzte automatisierte Absicherung &
+Fehler in Statusregeln, Undo-Funktion und Persistenz können unentdeckt bleiben. &
+Unit- und Integrationstests für Service, Repository und REST-Endpunkte ergänzen. \\
+
 \bottomrule
 \end{tabularx}
-\caption{Wesentliche Architekturentscheidungen}
-\label{tab:architecture-decisions}
+\caption{Risiken und technische Schulden des Bewerbungstrackers}
+\label{tab:risks}
 \end{table}
 
-\clearpage
-\setcounter{section}{10}
+\vspace{0.3cm}
 
-
-
-
-
-% =================  11 Risiken und technische Schulden  ========================
-
-\section{Risiken und technische Schulden}
-\label{sec:risks}
-
-{\small
-\renewcommand{\arraystretch}{1.15}
-\begin{longtable}{L{3.4cm} L{1.7cm} L{4.4cm} L{4.4cm}}
-\toprule
-\textbf{Risiko oder Schuld} & \textbf{Relevanz} & \textbf{Auswirkung} & \textbf{Mögliche Maßnahme} \\
-\midrule
-\endfirsthead
-\toprule
-\textbf{Risiko oder Schuld} & \textbf{Relevanz} & \textbf{Auswirkung} & \textbf{Mögliche Maßnahme} \\
-\midrule
-\endhead
-\bottomrule
-\endfoot
-Fehlende Transaktionsgrenzen & Hoch & Bewerbung und Historieneintrag können bei einem Teilfehler unterschiedliche Zustände aufweisen. & Schreibende Service-Methoden mit \texttt{@Transactional} ausführen. \\
-Undo-Persistenz & Hoch & Der Rücksetzzeitpunkt des ursprünglichen Historieneintrags wird nicht explizit aktualisiert und kann nach erneutem Laden verloren sein. & Repository-Methode zum Aktualisieren von \texttt{undone\_at} ergänzen und testen. \\
-Doppelte Statusregeln & Mittel & Frontend- und Backend-Regeln können bei Änderungen auseinanderlaufen. & Backend als alleinige fachliche Quelle behandeln oder Statusmetadaten über die API bereitstellen. \\
-N+1-Abfragen & Mittel & Beim Laden aller Bewerbungen wird für jede Bewerbung eine zusätzliche Historienabfrage ausgeführt. & Bewerbungen und Historien gebündelt laden und im Repository gruppieren. \\
-Fehlende Benutzerauthentifizierung & Mittel & Alle Bewerbungen gehören zu einem gemeinsamen Datenbestand; kein Mehrbenutzerbetrieb möglich. & Authentifizierung und Besitzerzuordnung bei einer Weiterentwicklung ergänzen. \\
-Fest hinterlegte lokale Konfiguration & Mittel & Zugangsdaten und CORS-Adressen sind nicht für andere Umgebungen geeignet. & Umgebungsabhängige Konfiguration und Secret-Verwaltung einsetzen. \\
-Vite-Entwicklungsserver & Niedrig & Das Frontend-Deployment ist nicht für einen produktiven Betrieb optimiert. & Produktions-Build erzeugen und über einen statischen Webserver bereitstellen. \\
-Begrenzte automatisierte Absicherung & Mittel & Fehler in Statusregeln, Undo und Persistenz können unentdeckt bleiben. & Unit- und Integrationstests für Service, Repository und REST-Endpunkte ergänzen. \\
-\end{longtable}
-}
-
-Die Risiken sind für einen Lehrveranstaltungsprototyp vertretbar, begrenzen jedoch die Eignung für einen produktiven Betrieb. Besonders die transaktionale Konsistenz und die Undo-Persistenz sollten vor einer Weiterverwendung korrigiert werden.
+Die Risiken sind für einen lokalen Lehrveranstaltungsprototyp vertretbar, begrenzen jedoch die Eignung für einen produktiven Betrieb.
+Insbesondere die fehlenden Transaktionsgrenzen und die fehlerhafte Undo-Persistenz sollten vor einer Weiterverwendung korrigiert werden.
 
 \clearpage
 
