@@ -1,0 +1,115 @@
+\begin{tikzpicture}[
+  node distance=1.25cm and 1.05cm
+]
+
+  \node[
+    state
+  ] (draft) {
+    DRAFT
+  };
+
+  \node[
+    state,
+    right=of draft
+  ] (applied) {
+    APPLIED
+  };
+
+  \node[
+    state,
+    right=of applied
+  ] (interview) {
+    INTERVIEW
+  };
+
+  \node[
+    state,
+    right=of interview
+  ] (offer) {
+    OFFER
+  };
+
+  \node[
+    state,
+    right=of offer,
+    fill=LayerGreen,
+    draw=DarkGreen
+  ] (accepted) {
+    ACCEPTED
+  };
+
+  \node[
+    state,
+    below=1.5cm of interview,
+    fill=LayerOrange,
+    draw=DarkOrange
+  ] (rejected) {
+    REJECTED
+  };
+
+  \node[
+    state,
+    below=1.5cm of offer,
+    fill=LayerOrange,
+    draw=DarkOrange
+  ] (cancelled) {
+    CANCELLED
+  };
+
+  \draw[connection]
+  (draft) --
+  (applied);
+
+  \draw[connection]
+  (applied) --
+  (interview);
+
+  \draw[connection]
+  (interview) --
+  (offer);
+
+  \draw[connection]
+  (offer) --
+  (accepted);
+
+  \draw[connection]
+  (applied) --
+  (rejected);
+
+  \draw[connection]
+  (interview) --
+  (rejected);
+
+  \draw[connection]
+  (offer) --
+  (cancelled);
+
+  \draw[
+    connection,
+    bend right=27
+  ]
+  (draft) to
+  (cancelled);
+
+  \draw[
+    connection,
+    bend left=20
+  ]
+  (applied) to
+  (offer);
+
+  \draw[
+    connection,
+    bend left=18
+  ]
+  (applied) to
+  (cancelled);
+
+  \draw[
+    connection,
+    bend left=12
+  ]
+  (interview) to
+  (cancelled);
+
+\end{tikzpicture}

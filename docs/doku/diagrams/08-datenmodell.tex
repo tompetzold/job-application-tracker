@@ -1,0 +1,73 @@
+\begin{tikzpicture}[
+  node distance=2.8cm
+]
+
+  \node[
+    draw=DarkOrange,
+    fill=LayerOrange,
+    rounded corners=3pt,
+    thick,
+    align=left,
+    text width=5.1cm,
+    inner sep=0.4cm
+  ] (applications) {
+    \textbf{applications}\\[0.15cm]
+    \texttt{id}\\
+    \texttt{company}\\
+    \texttt{position}\\
+    \texttt{status}\\
+    \texttt{location}\\
+    \texttt{salary\_mode}\\
+    \texttt{salary\_amount / min / max}\\
+    \texttt{application\_deadline}\\
+    \texttt{notes}\\
+    \texttt{created\_at / updated\_at}
+  };
+
+  \node[
+    draw=DarkOrange,
+    fill=LayerOrange,
+    rounded corners=3pt,
+    thick,
+    align=left,
+    text width=5.1cm,
+    inner sep=0.4cm,
+    right=2.8cm of applications
+  ] (history) {
+    \textbf{application\_history}\\[0.15cm]
+    \texttt{seq}\\
+    \texttt{id}\\
+    \texttt{application\_id}\\
+    \texttt{type}\\
+    \texttt{previous\_status}\\
+    \texttt{new\_status}\\
+    \texttt{text}\\
+    \texttt{created\_at}\\
+    \texttt{undone\_at}
+  };
+
+  \draw[connection]
+  (applications.east) --
+  node[
+    pos=0.08,
+    above=4pt,
+    font=\bfseries
+  ] {
+    1
+  }
+  node[
+    midway,
+    below=5pt
+  ] {
+    \texttt{application\_id}
+  }
+  node[
+    pos=0.92,
+    above=4pt,
+    font=\bfseries
+  ] {
+    n
+  }
+  (history.west);
+
+\end{tikzpicture}

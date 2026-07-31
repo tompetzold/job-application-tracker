@@ -845,70 +845,115 @@ Die verwendeten Zugangsdaten und veröffentlichten Ports sind für die lokale En
 
 \newpage
 \section{Querschnittliche Konzepte}
+\label{sec:crosscutting-concepts}
+
+
+% 8.1 - Statusmodell und Validierung
 \subsection{Statusmodell und Validierung}
 
-Die Statuspipeline ist die zentrale fachliche Regel der Anwendung. Sie ist im Backend als Übergangstabelle implementiert und wird im Frontend zur Steuerung der erlaubten Benutzeraktionen gespiegelt.
+Die Statuspipeline bildet die zentrale fachliche Regel des Bewerbungstrackers.
+Die zulässigen Übergänge sind im Backend in \texttt{ApplicationStatus} definiert.
+Das Frontend spiegelt diese Regeln, um unzulässige Benutzeraktionen bereits in der Oberfläche zu verhindern.
+Die verbindliche Prüfung erfolgt jedoch immer in der Geschäftslogikschicht.
+
+\vspace{0.3cm}
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[node distance=1.25cm and 1.05cm]
-  \node[state] (draft) {DRAFT};
-  \node[state,right=of draft] (applied) {APPLIED};
-  \node[state,right=of applied] (interview) {INTERVIEW};
-  \node[state,right=of interview] (offer) {OFFER};
-  \node[state,right=of offer,fill=LayerGreen] (accepted) {ACCEPTED};
-  \node[state,below=1.5cm of interview,fill=LayerOrange] (rejected) {REJECTED};
-  \node[state,below=1.5cm of offer,fill=LayerOrange] (cancelled) {CANCELLED};
-
-  \draw[connection] (draft) -- (applied);
-  \draw[connection] (applied) -- (interview);
-  \draw[connection] (interview) -- (offer);
-  \draw[connection] (offer) -- (accepted);
-  \draw[connection] (applied) -- (rejected);
-  \draw[connection] (interview) -- (rejected);
-  \draw[connection] (offer) -- (cancelled);
-  \draw[connection,bend right=27] (draft) to (cancelled);
-  \draw[connection,bend left=20] (applied) to (offer);
-  \draw[connection,bend left=20] (applied) to (cancelled);
-  \draw[connection,bend left=12] (interview) to (cancelled);
-\end{tikzpicture}%
+\resizebox{\textwidth}{!}{
+  \input{diagrams/08-statusmodell.tex}
 }
 \caption{Zulässige Statusübergänge}
 \label{fig:status-model}
 \end{figure}
 
-Firma und Position sind beim Erstellen verpflichtend. Gehaltswerte dürfen nicht negativ sein und bei einem Wertebereich darf das Minimum nicht über dem Maximum liegen. Inhaltliche Aktualisierungen und Statusänderungen werden über getrennte Endpunkte verarbeitet.
+Beim Erstellen einer Bewerbung sind Firma und Position verpflichtend.
+Gehaltswerte dürfen nicht negativ sein.
+Bei einem Gehaltsbereich darf das Mindestgehalt nicht über dem Maximalgehalt liegen.
+Der initiale Status wird unabhängig von den übertragenen Daten auf \texttt{DRAFT} gesetzt.
 
+Inhaltliche Änderungen und Statusänderungen werden über getrennte REST-Endpunkte verarbeitet.
+Dadurch können Statuswechsel unabhängig von Änderungen der übrigen Bewerbungsdaten validiert und protokolliert werden.
+
+
+% 8.2 - Fehlerbehandlung
 \subsection{Fehlerbehandlung}
+
+Fachliche Fehler werden auf HTTP-Statuscodes abgebildet.
+Verbindungsfehler behandelt das Frontend selbst.
 
 \begin{table}[H]
 \centering
-\begin{tabularx}{\textwidth}{L{4cm} L{2.5cm} Y}
+\small
+\begin{tabularx}{\textwidth}{L{3.5cm} L{2.2cm} Y}
 \toprule
-\textbf{Situation} & \textbf{HTTP-Status} & \textbf{Verhalten} \\
+\textbf{Situation} & \textbf{Status} & \textbf{Reaktion} \\
 \midrule
-Ungültige Eingabe oder Statusübergang & 400 Bad Request & Das Backend liefert ein JSON-Objekt mit einer fachlichen Fehlermeldung. \\
-Unbekannte Bewerbungs-ID & 404 Not Found & Eine \texttt{ApplicationNotFoundException} wird in eine verständliche Fehlerantwort übersetzt. \\
-Erfolgreiches Löschen & 204 No Content & Das Frontend erwartet keinen Response-Body. \\
-Backend nicht erreichbar & Keine HTTP-Antwort & Das Frontend leert den lokalen Datenbestand und kennzeichnet das Backend als offline. \\
+
+Ungültige Eingabe oder Statuswechsel &
+400 &
+JSON-Antwort mit fachlicher Fehlermeldung. \\
+
+Unbekannte Bewerbungs-ID &
+404 &
+Die \texttt{ApplicationNotFoundException} wird in eine JSON-Fehlerantwort übersetzt. \\
+
+Erfolgreiches Löschen &
+204 &
+Antwort ohne Response-Body. \\
+
+Backend nicht erreichbar &
+-- &
+Lokale Daten werden geleert und das Backend als nicht erreichbar angezeigt. \\
+
 \bottomrule
 \end{tabularx}
-\caption{Fehlerbehandlung an der REST-Schnittstelle}
+\caption{Fehlerbehandlung in Frontend und Backend}
 \label{tab:error-handling}
 \end{table}
 
-\subsection{Persistenz und Änderungshistorie}
 
-Der aktuelle Zustand einer Bewerbung und die historischen Änderungen werden getrennt gespeichert. Dadurch kann der aktuelle Status direkt gelesen werden, während frühere Übergänge für die Historie und statistische Auswertungen erhalten bleiben. Ein Historieneintrag enthält Typ, vorherigen Status, neuen Status, Beschreibung, Erstellungszeitpunkt und einen optionalen Rücksetzzeitpunkt.
+% 8.3 - Datenmodell, Persistenz und Änderungshistorie
+\newpage
+\subsection{Datenmodell, Persistenz und Änderungshistorie}
 
-Die Persistenzschicht verwendet parametrisierte SQL-Anweisungen über \texttt{JdbcTemplate}. Dadurch werden Nutzereingaben nicht direkt in SQL-Zeichenketten eingesetzt. Bewerbung und Historieneintrag werden derzeit in getrennten Datenbankoperationen geschrieben; die daraus entstehende Konsistenzgefahr wird in Kapitel~\ref{sec:risks} bewertet.
+Die Tabelle \texttt{applications} speichert die Bewerbungsdaten und den aktuellen Status.
+Die zugehörigen Änderungen werden in \texttt{application\_history} über eine 1:n-Beziehung protokolliert.
 
-\subsection{Konfiguration und Kommunikation}
+\vspace{0.3cm}
 
-Die Backend-Adresse des Frontends ist über \texttt{VITE\_API\_BASE\_URL} konfigurierbar und fällt lokal auf \texttt{http://localhost:8080} zurück. Die Datenbankverbindung wird im Backend durch Spring-Umgebungsvariablen gesetzt. Innerhalb des Docker-Netzwerks wird PostgreSQL über \texttt{postgres:5432} erreicht. CORS ist im Controller für die lokalen Frontend-Adressen \texttt{localhost:5173} und \texttt{localhost:5174} freigegeben.
+\begin{figure}[H]
+\centering
+\resizebox{0.9\textwidth}{!}{
+  \input{diagrams/08-datenmodell.tex}
+}
+\caption{Vereinfachtes Datenmodell des Bewerbungstrackers}
+\label{fig:data-model}
+\end{figure}
 
-Die Kommunikation zwischen Frontend und Backend erfolgt synchron. Das Frontend wartet nach schreibenden Operationen auf die aktualisierte Repräsentation der Bewerbung und ersetzt damit seinen lokalen Zustand.
+Historieneinträge enthalten den Änderungstyp, den vorherigen und neuen Status, eine Beschreibung und den Erstellungszeitpunkt.
+Verwendet werden die Typen \texttt{APPLICATION\_CREATED}, \texttt{STATUS\_CHANGED} und \texttt{STATUS\_CHANGE\_UNDONE}.
+
+Die Persistenzschicht führt parametrisierte SQL-Anweisungen über \texttt{JdbcTemplate} aus.
+Bewerbung und Historieneintrag werden dabei in getrennten Datenbankoperationen ohne gemeinsame Transaktion gespeichert.
+Bei einem Fehler zwischen diesen Operationen kann deshalb ein inkonsistenter Zustand entstehen.
+
+
+% 8.4 - Kommunikation und Sicherheit
+\subsection{Kommunikation und Sicherheit}
+
+Die Kommunikation zwischen Frontend und Backend erfolgt synchron über HTTP und JSON.
+Nach dem Erstellen, Bearbeiten, Ändern oder Zurücksetzen eines Status übernimmt das Frontend die zurückgegebene Bewerbung in seinen lokalen Zustand.
+Beim Löschen entfernt es den Eintrag nach einer erfolgreichen Antwort ohne Response-Body.
+
+CORS erlaubt Browserzugriffe von \texttt{http://localhost:5173} und \texttt{http://localhost:5174}.
+Andere Browser-Ursprünge werden nicht freigegeben.
+CORS stellt jedoch keine Authentifizierung oder Zugriffskontrolle dar.
+
+Der Bewerbungstracker ist als lokale Einzelbenutzer-Anwendung ausgelegt.
+Eine Authentifizierung, Autorisierung und Trennung unterschiedlicher Benutzer war für diesen Anwendungsfall daher nicht erforderlich.
+Jeder Client mit direktem Zugriff auf das Backend kann sämtliche Bewerbungen lesen und verändern.
+Bei einer Bereitstellung außerhalb der lokalen Entwicklungsumgebung müsste ein entsprechender Zugriffsschutz ergänzt werden.
 
 
 
